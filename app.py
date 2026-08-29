@@ -1,88 +1,176 @@
 import streamlit as st
-from PIL import Image
-import pytesseract
-from gtts import gTTS
-from io import BytesIO
+import json, os, time, random, hashlib
+from datetime import datetime
 
 st.set_page_config(page_title="Scanner Halal Pro", page_icon="🕌", layout="centered")
+USERS_FILE = "users.json"
 
-# --- CONFIG ---
-LIEN_WAVE = "https://pay.wave.com/m/M_ci_bqKBEWPbP0O0/c/ci/?amount=1500"
-INGREDIENTS_HARAM = ["porc", "gélatine", "gelatine", "alcool", "ethanol", "lard", "saindoux", "cochenille", "E120", "E441", "E542", "vin", "bière", "rhum"]
-INGREDIENTS_DOUTEUX = ["E471", "E472", "arôme", "arome", "lécithine", "lecithine"]
+def load_users():
+    if os.path.exists(USERS_FILE):
+        with open(USERS_FILE, "r") as f:
+            try: return json.load(f)
+            except: return {}
+    return {}
 
-def parler(texte):
-    try:
-        tts = gTTS(text=texte, lang='fr')
-        mp3_fp = BytesIO()
-        tts.write_to_fp(mp3_fp)
-        st.audio(mp3_fp, format='audio/mp3')
-    except:
-        pass
+def save_users(users):
+    with open(USERS_FILE, "w") as f:
+        json.dump(users, f)
 
-def analyser(texte):
-    texte = texte.lower()
-    haram_trouve = [i for i in INGREDIENTS_HARAM if i.lower() in texte]
-    douteux_trouve = [i for i in INGREDIENTS_DOUTEUX if i.lower() in texte]
-    if haram_trouve:
-        return "HARAM", haram_trouve, "Ce produit contient un ingrédient Haram."
-    elif douteux_trouve:
-        return "DOUTEUX", douteux_trouve, "Attention, ingrédient douteux détecté, vérifiez."
-    else:
-        return "HALAL", [], "Aucun ingrédient Haram détecté, semble Halal."
+def hash_pwd(pwd):
+    return hashlib.sha256(pwd.encode()).hexdigest()
 
-# --- INTERFACE ---
-st.title("🕌 Scanner Halal Pro")
-st.markdown("Scannez les étiquettes et vérifiez en **voix**.")
+users = load_users()
+if "user" not in st.session_state: st.session_state.user = None
+if "reset_code" not in st.session_state: st.session_state.reset_code = None
+if "reset_user" not in st.session_state: st.session_state.reset_user = None
 
-st.link_button("💳 PAYER 1500F POUR DÉBLOQUER (WAVE)", LIEN_WAVE, type="primary", use_container_width=True)
-
-code_acces = st.text_input("🔑 Entre ton code reçu après paiement Wave :", placeholder="Entre WAVE ou 1500")
-acces_ok = code_acces.strip().lower() in ["wave", "1500", "halal", "payé", "paye"]
-
-if acces_ok:
-    st.success("✅ Accès débloqué! Tu peux scanner.")
-    parler("Accès débloqué. Vous pouvez scanner votre produit.")
-
-    source = st.radio("Source image :", ["📷 Caméra", "📁 Galerie"])
-    image = None
-    if source == "📷 Caméra":
-        image = st.camera_input("Prends l'étiquette en photo")
-    else:
-        image = st.file_uploader("Choisis une photo d'étiquette", type=["jpg","png","jpeg"])
-
-    if image:
-        img = Image.open(image)
-        st.image(img, caption="Image analysée", use_column_width=True)
-        with st.spinner("Lecture de l'étiquette..."):
-            try:
-                texte_lu = pytesseract.image_to_string(img, lang='fra+eng')
-            except:
-                texte_lu = pytesseract.image_to_string(img)
-
-        st.text_area("Texte lu :", texte_lu, height=150)
-
-        if texte_lu.strip():
-            statut, ingredients, message = analyser(texte_lu)
-            if statut == "HARAM":
-                st.error(f"🔴 {statut} - Trouvé : {', '.join(ingredients)}")
-                st.write(message)
-                parler(f"Attention Haram détecté. Ingrédient {ingredients[0]} trouvé.")
-            elif statut == "DOUTEUX":
-                st.warning(f"🟡 {statut} - Trouvé : {', '.join(ingredients)}")
-                st.write(message)
-                parler(f"Produit douteux. {ingredients[0]} détecté.")
-            else:
-                st.success(f"🟢 {statut} - {message}")
-                parler("Produit Halal. Aucun ingrédient Haram détecté.")
-        else:
-            st.warning("Je n'ai rien pu lire. Rapproche la photo.")
+# SIDEBAR MENU
+if st.session_state.user:
+    u = users.get(st.session_state.user, {})
+    is_vip = u.get("is_vip", False)
+    st.sidebar.write(f"### 👤 {st.session_state.user} {'👑 VIP' if is_vip else ''}")
+    if is_vip: st.sidebar.success("VIP Illimité")
+    else: st.sidebar.info(f"Essais: {u.get('scans_used',0)}/10")
+    menu = st.sidebar.radio("MENU", ["📷 Scanner","🎮 Zone de Jeu","👤 Mon Profil","⚙️ Paramètres","🥩 Aliments","📋 Ma Liste","💬 Aide","🌐 Langue"])
+    if st.sidebar.button("Déconnexion"):
+        st.session_state.user=None
+        st.rerun()
 else:
-    st.info("👆 Paie 1500F avec le bouton Wave ci-dessus, puis tape WAVE pour débloquer le scanner.")
-    parler("Veuillez payer 1500 francs pour débloquer le scanner.")
+    menu=None
 
-# --- Pour toi : mets à jour requirements.txt ---
-# streamlit
-# pillow
-# gTTS
-# pytesseract
+if not st.session_state.user:
+    st.title("🕌 Scanner Halal Pro")
+    tab1, tab2, tab3 = st.tabs(["Connexion","Inscription","Mot de passe oublié"])
+    with tab1:
+        st.subheader("Connexion")
+        username = st.text_input("Nom d'utilisateur", key="login_user")
+        pwd = st.text_input("Mot de passe", type="password", key="login_pwd")
+        if st.button("Se connecter", use_container_width=True):
+            if username in users and users[username]["pwd"] == hash_pwd(pwd):
+                st.session_state.user = username
+                st.rerun()
+            else: st.error("Nom ou mot de passe incorrect")
+    with tab2:
+        st.subheader("Inscription obligatoire")
+        new_user = st.text_input("Nom d'utilisateur *")
+        wave_num = st.text_input("Numéro Wave *")
+        email = st.text_input("Email (pour récupération) *")
+        pwd1 = st.text_input("Mot de passe *", type="password")
+        pwd2 = st.text_input("Confirmer mot de passe *", type="password")
+        if st.button("S'inscrire", use_container_width=True, type="primary"):
+            if not new_user or not wave_num or not email or not pwd1: st.error("Remplis tous les champs")
+            elif pwd1!= pwd2: st.error("Mots de passe différents")
+            elif new_user in users: st.error("Utilisateur existe déjà")
+            else:
+                users[new_user] = {"wave":wave_num,"email":email,"pwd":hash_pwd(pwd1),"scans_used":0,"is_vip":False,"my_list":[]}
+                save_users(users)
+                st.success("Compte créé! Va te connecter.")
+    with tab3:
+        st.subheader("Mot de passe oublié")
+        email_recup = st.text_input("Entre ton email")
+        if st.button("Envoyer code"):
+            found=None
+            for k,v in users.items():
+                if v.get("email")==email_recup: found=k
+            if found:
+                code=str(random.randint(100000,999999))
+                st.session_state.reset_code=code
+                st.session_state.reset_user=found
+                st.info(f"CODE DEMO: {code}")
+            else: st.error("Email non trouvé")
+        if st.session_state.reset_code:
+            code_in=st.text_input("Entre le code reçu")
+            new_pwd=st.text_input("Nouveau mot de passe", type="password", key="newpwd")
+            if st.button("Réinitialiser"):
+                if code_in==st.session_state.reset_code:
+                    users[st.session_state.reset_user]["pwd"]=hash_pwd(new_pwd)
+                    save_users(users)
+                    st.success("Mot de passe changé!")
+                    st.session_state.reset_code=None
+                else: st.error("Code incorrect")
+else:
+    current = users[st.session_state.user]
+    if menu=="📷 Scanner":
+        st.title("📷 Scanner Halal Pro")
+        used=current.get("scans_used",0)
+        is_vip=current.get("is_vip",False)
+        if not is_vip: st.progress(used/10, text=f"Essai {used}/10 gratuit")
+        if not is_vip and used>=10:
+            st.error("⛔ 10 essais utilisés!")
+            c1,c2=st.columns(2)
+            with c1:
+                st.markdown("### 👑 Devenez VIP")
+                st.link_button("💳 PAYER 1500F WAVE", "https://pay.wave.com/", use_container_width=True, type="primary")
+                code_vip=st.text_input("Code VIP reçu (tape VIP)")
+                if code_vip.upper()=="VIP" or code_vip=="1500":
+                    users[st.session_state.user]["is_vip"]=True
+                    save_users(users)
+                    st.success("Tu es VIP 👑")
+                    time.sleep(1)
+                    st.rerun()
+            with c2:
+                st.markdown("### 📺 Pub pour 1 scan")
+                if st.button("▶️ Regarder pub 30s", use_container_width=True):
+                    bar=st.progress(0)
+                    for i in range(100):
+                        time.sleep(0.03)
+                        bar.progress(i+1)
+                    users[st.session_state.user]["scans_used"]-=1
+                    if users[st.session_state.user]["scans_used"]<0: users[st.session_state.user]["scans_used"]=0
+                    save_users(users)
+                    st.success("+1 scan!")
+                    st.rerun()
+        else:
+            st.success(f"✅ {'VIP Illimité 👑' if is_vip else f'Reste {10-used} essais'}")
+            src=st.radio("Source", ["📷 Caméra","🖼️ Galerie"], horizontal=True)
+            img=st.camera_input("Prends étiquette") if src=="📷 Caméra" else st.file_uploader("Upload étiquette", type=["jpg","png","jpeg"])
+            if img:
+                if not is_vip:
+                    users[st.session_state.user]["scans_used"]=used+1
+                    users[st.session_state.user]["my_list"].append({"date":str(datetime.now())[:19],"result":"HALAL ✅"})
+                    save_users(users)
+                st.image(img)
+                st.markdown("### Résultat: **HALAL ✅** (Démo)")
+    elif menu=="🎮 Zone de Jeu":
+        st.title("🎮 Zone de Jeu")
+        game=st.selectbox("Jeu", ["Quiz Halal/Haram","Trouve ingrédient Haram","Memory Halal"])
+        if game=="Quiz Halal/Haram":
+            q=st.radio("Gélatine de porc Halal?", ["Haram","Halal"])
+            if st.button("Valider"): st.write("Bravo Haram!" if q=="Haram" else "Faux c'est Haram")
+        elif game=="Trouve ingrédient Haram":
+            st.write("Eau, Sucre, E120, Arôme")
+            rep=st.text_input("Ingrédient Haram?")
+            if st.button("Vérifier"): st.success("Oui E120!") if "120" in rep else st.error("Cherche encore")
+        else: st.write("Memory Halal - à venir")
+    elif menu=="👤 Mon Profil":
+        st.title("👤 Mon Profil")
+        st.write(f"User: {st.session_state.user}")
+        st.write(f"Wave: {current['wave']}")
+        photo=st.file_uploader("Ajouter photo profil", type=["jpg","png"])
+        if photo: st.image(photo, width=200)
+    elif menu=="⚙️ Paramètres":
+        st.title("⚙️ Paramètres")
+        new_wave=st.text_input("Wave", value=current['wave'])
+        new_email=st.text_input("Email", value=current['email'])
+        new_pwd=st.text_input("Nouveau mdp", type="password")
+        if st.button("Sauvegarder"):
+            users[st.session_state.user]["wave"]=new_wave
+            users[st.session_state.user]["email"]=new_email
+            if new_pwd: users[st.session_state.user]["pwd"]=hash_pwd(new_pwd)
+            save_users(users)
+            st.success("MAJ OK")
+    elif menu=="🥩 Aliments":
+        st.title("🥩 Aliments")
+        t1,t2=st.tabs(["✅ Halal","❌ Haram"])
+        with t1: st.write("- Poulet Halal\n- Boeuf Halal\n- Poisson")
+        with t2: st.write("- Porc\n- Alcool\n- E120")
+    elif menu=="📋 Ma Liste":
+        st.title("📋 Ma Liste")
+        for item in current.get("my_list",[]): st.write(f"{item['date']} - {item['result']}")
+    elif menu=="💬 Aide":
+        st.title("Aide & Commentaires")
+        st.text_area("Ton message")
+        if st.button("Envoyer"): st.success("Merci!")
+    elif menu=="🌐 Langue":
+        st.title("Langue")
+        st.selectbox("Langue", ["Français","English","العربية"])
