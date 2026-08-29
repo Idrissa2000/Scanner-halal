@@ -1,5 +1,5 @@
 import streamlit as st
-import json, os, re, random
+import json, os, random
 from datetime import datetime
 
 WAVE_LINK = "https://pay.wave.com/m/M_ci_bqKBEWPbP0OO/c/ci/?amount=1500"
@@ -20,7 +20,8 @@ def save_json(f, data):
 users = load_json(USERS_FILE, {})
 comments = load_json(COMMENTS_FILE, [])
 
-st.set_page_config(page_title="Scanner Halal VIP", page_icon="logo.png", layout="centered")
+# LOGO = logo.jpeg
+st.set_page_config(page_title="Scanner Halal VIP", page_icon="logo.jpeg", layout="centered")
 
 st.markdown(f"""
 <style>
@@ -35,13 +36,12 @@ st.markdown(f"""
 
 if 'user' not in st.session_state: st.session_state.user=None
 if 'page' not in st.session_state: st.session_state.page="auth"
-if 'subpage' not in st.session_state: st.session_state.subpage=None
 if 'reset_code' not in st.session_state: st.session_state.reset_code=None
 
 if st.session_state.page=="auth":
     c = st.columns([1,2,1])[1]
     with c:
-        try: st.image("logo.png", use_container_width=True)
+        try: st.image("logo.jpeg", use_container_width=True)
         except: st.title("🕌 Scanner Halal")
     st.markdown("<h2 style='text-align:center;color:#0a2a6b;'>Inscription Obligatoire</h2>", unsafe_allow_html=True)
     tab1, tab2, tab3 = st.tabs(["Connexion","Inscription","Mot de passe oublie"])
@@ -101,7 +101,7 @@ user_email = st.session_state.user
 user = users[user_email]
 
 with st.sidebar:
-    try: st.image("logo.png", width=90)
+    try: st.image("logo.jpeg", width=90)
     except: pass
     st.write(f"**{user.get('nom','')}**")
     if user['is_vip']: st.markdown('<span class="vip-badge">VIP Illimite</span>', unsafe_allow_html=True)
@@ -145,7 +145,6 @@ if menu=="📸 Scanner":
             st.success(result+" - "+detail)
             users[user_email]['history'].append({'date':datetime.now().strftime("%d/%m %H:%M"),'result':result,'detail':detail})
             save_json(USERS_FILE, users)
-
 else:
     if st.button("⬅️ Retour Scanner"):
         st.rerun()
