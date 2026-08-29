@@ -1,238 +1,211 @@
 import streamlit as st
-import random
+import json, os, re, random
 from datetime import datetime
 
-st.set_page_config(page_title="Scanner Halal VIP", page_icon="🌙", layout="centered")
+WAVE_LINK = "https://pay.wave.com/m/M_ci_bqKBEWPbP0OO/c/ci/?amount=1500"
+USERS_FILE = "users.json"
+COMMENTS_FILE = "commentaires.json"
 
-st.markdown("""
+def load_json(f, default):
+    if os.path.exists(f):
+        try:
+            with open(f,'r',encoding='utf-8') as fp: return json.load(fp)
+        except: return default
+    return default
+
+def save_json(f, data):
+    with open(f,'w',encoding='utf-8') as fp:
+        json.dump(data,fp,ensure_ascii=False,indent=2)
+
+users = load_json(USERS_FILE, {})
+comments = load_json(COMMENTS_FILE, [])
+
+st.set_page_config(page_title="Scanner Halal VIP", page_icon="logo.png", layout="centered")
+
+st.markdown(f"""
 <style>
-.vip-badge{background:gold;color:black;padding:5px 12px;border-radius:12px;font-weight:bold}
-.pub-zone{background:#0d1b4a;color:white;padding:12px;text-align:center;border-radius:8px;margin-top:20px}
-.scan-counter{background:#0d1b4a;color:white;padding:8px;border-radius:10px;text-align:center}
+.block-container{{padding-bottom:80px}}
+.pub-zone{{position:fixed;bottom:0;left:0;right:0;background:#000;color:white;text-align:center;padding:12px;z-index:9999;font-weight:bold;font-size:13px}}
+.pub-zone a{{color:#00D1FF;text-decoration:none}}
+.card{{background:white;padding:15px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:10px}}
+.vip-badge{{background:gold;color:black;padding:4px 10px;border-radius:20px;font-weight:bold}}
 </style>
+<div class="pub-zone">📢 PUB - <a href="{WAVE_LINK}" target="_blank">Deviens VIP 1500F - Payer Wave</a></div>
 """, unsafe_allow_html=True)
 
-if 'users' not in st.session_state: st.session_state.users={}
-if 'current_user' not in st.session_state: st.session_state.current_user=None
-if 'reset_codes' not in st.session_state: st.session_state.reset_codes={}
-if 'all_comments' not in st.session_state: st.session_state.all_comments=[]
-if 'lang' not in st.session_state: st.session_state.lang="Français"
+if 'user' not in st.session_state: st.session_state.user=None
+if 'page' not in st.session_state: st.session_state.page="auth"
+if 'subpage' not in st.session_state: st.session_state.subpage=None
+if 'reset_code' not in st.session_state: st.session_state.reset_code=None
 
-def get_user(): return st.session_state.users.get(st.session_state.current_user)
-
-try: st.image("logo.png", width=130)
-except: st.markdown("<h1 style='color:#0d1b4a'>🌙 Scanner Halal</h1>", unsafe_allow_html=True)
-
-def pub_zone(): st.markdown('<div class="pub-zone">📢 PUB - Deviens VIP 1500F pour retirer pub | Wave: 07 07 07 07 07</div>', unsafe_allow_html=True)
-
-# AUTH
-if st.session_state.current_user is None:
-    st.title("🔐 Inscription Obligatoire")
-    st.session_state.lang = st.selectbox("Langue", ["Français","English","العربية"])
-    t1,t2,t3 = st.tabs(["S'inscrire","Se connecter","Mot de passe oublié"])
-    with t1:
-        username=st.text_input("Nom utilisateur*")
-        c1,c2=st.columns([1,2])
-        with c1: code_pays=st.selectbox("Code pays", ["+225 🇨🇮","+33 🇫🇷","+212 🇲🇦","+221 🇸🇳","+223 🇲🇱","+226 🇧🇫"])
-        with c2: wave=st.text_input("Numéro Wave*")
-        email=st.text_input("Email* pour récupération")
-        pwd=st.text_input("Mot de passe*",type="password")
-        pwd2=st.text_input("Confirmer*",type="password")
-        if st.button("Créer compte",type="primary",use_container_width=True):
-            if not all([username,wave,pwd,email]): st.error("Remplis *")
-            elif pwd!=pwd2: st.error("Mdp différents")
-            elif username in st.session_state.users: st.error("Nom pris")
-            else:
-                st.session_state.users[username]={"username":username,"wave":code_pays+" "+wave,"email":email,"pwd":pwd,"photo":None,"scans_used":0,"scans_bonus":0,"is_vip":False,"my_list":[]}
-                st.success("Compte créé! Connecte-toi")
-    with t2:
-        lu=st.text_input("Nom utilisateur",key="lu")
-        lp=st.text_input("Mot de passe",type="password",key="lp")
-        if st.button("Se connecter",use_container_width=True):
-            u=st.session_state.users.get(lu)
-            if u and u['pwd']==lp:
-                st.session_state.current_user=lu
+if st.session_state.page=="auth":
+    c = st.columns([1,2,1])[1]
+    with c:
+        try: st.image("logo.png", use_container_width=True)
+        except: st.title("🕌 Scanner Halal")
+    st.markdown("<h2 style='text-align:center;color:#0a2a6b;'>Inscription Obligatoire</h2>", unsafe_allow_html=True)
+    tab1, tab2, tab3 = st.tabs(["Connexion","Inscription","Mot de passe oublie"])
+    with tab1:
+        email = st.text_input("Email", key="login_email")
+        pwd = st.text_input("Mot de passe", type="password", key="login_pwd")
+        if st.button("Se connecter", type="primary", use_container_width=True):
+            u = users.get(email)
+            if u and u.get('pwd')==pwd:
+                st.session_state.user=email
+                st.session_state.page="scanner"
                 st.rerun()
-            else: st.error("Faux identifiants")
-    with t3:
-        em=st.text_input("Ton email")
-        if st.button("Envoyer code"):
-            found=None
-            for k,v in st.session_state.users.items():
-                if v['email']==em: found=k
-            if found:
-                code=str(random.randint(100000,999999))
-                st.session_state.reset_codes[em]=(code,found)
-                st.warning(f"CODE DEMO: {code}")
-            else: st.error("Email non trouvé")
-        c1=st.text_input("Code reçu")
-        c2=st.text_input("Nouveau mdp",type="password")
-        if st.button("Réinitialiser"):
-            if em in st.session_state.reset_codes and st.session_state.reset_codes[em][0]==c1:
-                st.session_state.users[st.session_state.reset_codes[em][1]]['pwd']=c2
-                st.success("Changé!")
-    pub_zone()
+            else: st.error("Email ou mot de passe incorrect")
+    with tab2:
+        nom = st.text_input("Nom utilisateur")
+        wave = st.text_input("Numero Wave avec code pays", placeholder="+225 07 XX XX XX XX")
+        email_r = st.text_input("Email Inscription")
+        pwd1 = st.text_input("Mot de passe", type="password", key="pwd1")
+        pwd2 = st.text_input("Confirmer mot de passe", type="password", key="pwd2")
+        if st.button("Creer mon compte", type="primary", use_container_width=True):
+            if not nom or not wave or not email_r or not pwd1:
+                st.error("Remplis tous les champs")
+            elif pwd1!=pwd2:
+                st.error("Mots de passe differents")
+            elif email_r in users:
+                st.error("Email deja utilise")
+            else:
+                users[email_r]={'nom':nom,'wave':wave,'pwd':pwd1,'scans':0,'is_vip':False,'history':[],'bonus_scans':0}
+                save_json(USERS_FILE, users)
+                st.success("Compte cree! Va dans Connexion")
+    with tab3:
+        email_f = st.text_input("Ton email pour code")
+        if st.button("Envoyer code reinitialisation"):
+            if email_f in users:
+                code = str(random.randint(100000,999999))
+                st.session_state.reset_code=code
+                st.session_state.reset_email=email_f
+                st.success(f"Code envoye a {email_f} (Demo): {code}")
+            else: st.error("Email non trouve")
+        if st.session_state.reset_code:
+            c_in = st.text_input("Code recu")
+            npwd = st.text_input("Nouveau mot de passe", type="password", key="newpwd")
+            if st.button("Reinitialiser"):
+                if c_in==st.session_state.reset_code:
+                    users[st.session_state.reset_email]['pwd']=npwd
+                    save_json(USERS_FILE, users)
+                    st.success("Mot de passe change")
+                    st.session_state.reset_code=None
+                else: st.error("Code incorrect")
     st.stop()
 
-user=get_user()
+if not st.session_state.user or st.session_state.user not in users:
+    st.session_state.page="auth"
+    st.rerun()
+
+user_email = st.session_state.user
+user = users[user_email]
 
 with st.sidebar:
-    if user.get('photo'): st.image(user['photo'],width=100)
-    st.write(f"**{user['username']}**")
-    if user['is_vip']: st.markdown('<span class="vip-badge">👑 VIP ILLIMITE</span>',unsafe_allow_html=True)
-    else:
-        total=5+user['scans_bonus']
-        st.markdown(f'<div class="scan-counter">Essai {user["scans_used"]}/{total}</div>',unsafe_allow_html=True)
-    menu=st.radio("MENU", ["🔍 SCANNER (Page 2)","🎮 Zone de Jeu","👤 Profil","⚙️ Paramètres","🥗 Aliments","📜 Ma Liste","💬 Aide & Commentaires","📖 Notice","🎧 Coran Audio","📚 Hadiths","🤲 Douas du jour","🌐 Langue","Déconnexion"])
+    try: st.image("logo.png", width=90)
+    except: pass
+    st.write(f"**{user.get('nom','')}**")
+    if user['is_vip']: st.markdown('<span class="vip-badge">VIP Illimite</span>', unsafe_allow_html=True)
+    else: st.caption(f"Essai {user['scans']+1}/05")
+    menu = st.selectbox("MENU", ["📸 Scanner","🎮 Zone de Jeux","👤 Mon Profil","⚙️ Parametres","🍎 Aliments","📋 Ma Liste","💬 Aide & Commentaires","📖 Notice","🌐 Langue","🎧 Coran - Imam Matroud","📜 Hadiths","🤲 Douas du Jour"])
+    if st.button("Deconnexion"):
+        st.session_state.user=None
+        st.session_state.page="auth"
+        st.rerun()
 
-if menu=="🔍 SCANNER (Page 2)":
-    st.header("Page 2 - Scanner")
-    can_scan=user['is_vip'] or (user['scans_used'] < 5+user['scans_bonus'])
-    if not can_scan:
-        st.error("⛔ 5 essais terminés")
-        colA,colB=st.columns(2)
-        with colA:
-            if st.button("💳 Devenir VIP 1500F",type="primary",use_container_width=True): st.session_state.show_pay=True
-        with colB:
-            if st.button("▶️ Regarder pub (+1 scan)",use_container_width=True):
-                user['scans_bonus']+=1
-                st.rerun()
-        if st.session_state.get('show_pay'):
-            st.info("Wave 1500F au 07 07 XX XX")
-            if st.button("J'ai payé - Activer VIP"):
-                user['is_vip']=True
+if menu=="📸 Scanner":
+    st.title("Scanner Halal")
+    st.caption(f"Essai {user['scans']+1}/05" if not user['is_vip'] else "VIP Illimite")
+    scans_used = user['scans'] - user.get('bonus_scans',0)
+    if not user['is_vip'] and scans_used>=5:
+        st.error("Tu as utilise tes 5 essais gratuits")
+        col1,col2 = st.columns(2)
+        with col1:
+            st.link_button("💳 Deviens VIP 1500F", WAVE_LINK, type="primary", use_container_width=True)
+            if st.button("✅ J'ai paye - Activer VIP", use_container_width=True):
+                users[user_email]['is_vip']=True
+                save_json(USERS_FILE, users)
                 st.balloons()
+                st.success("VIP active")
                 st.rerun()
-    else:
-        prod=st.text_input("Produit / ingrédients")
-        if st.button("Scanner",type="primary",use_container_width=True):
-            if prod:
-                if not user['is_vip']: user['scans_used']+=1
-                hl=prod.lower()
-                if any(x in hl for x in ["porc","jambon","bacon","saindoux","sang","alcool","vin","bière"]): res="❌ HARAM"
-                elif any(x in hl for x in ["gélatine","e471","e472","arôme","e120","e441"]): res="⚠️ DOUTEUX (Mushbooh)"
-                else: res="✅ HALAL"
-                if "HARAM" in res: st.error(res)
-                elif "DOUTEUX" in res: st.warning(res)
-                else: st.success(res)
-                user['my_list'].append({"date":datetime.now().strftime("%d/%m %H:%M"),"produit":prod,"resultat":res})
-                if not user['is_vip']: st.rerun()
-    pub_zone()
+        with col2:
+            if st.button("▶️ Regarder pub pour 1 scan", use_container_width=True):
+                st.info("Pub regardee! +1 scan")
+                users[user_email]['bonus_scans']=users[user_email].get('bonus_scans',0)+1
+                save_json(USERS_FILE, users)
+                st.rerun()
+        st.stop()
+    uploaded = st.file_uploader("Photo ingredients", type=['jpg','jpeg','png'])
+    if uploaded:
+        st.image(uploaded, use_container_width=True)
+        if st.button("Analyser", type="primary", use_container_width=True):
+            if not user['is_vip']:
+                users[user_email]['scans']+=1
+            result = random.choice(["HALAL ✅","HARAM ❌","DOUTEUX ⚠️"])
+            detail = "Aucun haram" if "HALAL" in result else "Gelatine porcine / Alcool suspect"
+            st.success(result+" - "+detail)
+            users[user_email]['history'].append({'date':datetime.now().strftime("%d/%m %H:%M"),'result':result,'detail':detail})
+            save_json(USERS_FILE, users)
 
-elif menu=="🎮 Zone de Jeu":
-    st.header("Zone de Jeu - 18/20 = +2 scans")
-    if st.button("⬅️ Retour au Scanner"): st.rerun()
-    j1,j2,j3=st.tabs(["Quiz Halal","Mémoire","Calcul"])
-    with j1:
-        q=st.radio("Le bœuf non halal est?",["Halal","Haram","Douteux"])
-        if st.button("Valider Quiz",key="q1"):
-            if q=="Haram":
-                st.success("20/20 +2 scans")
-                user['scans_bonus']+=2
-            else: st.error("10/20")
-    with j2:
-        st.code("Porc, Sang, Alcool")
-        ans=st.text_input("Recopie")
-        if st.button("Valider Mémoire",key="q2"):
-            if "porc" in ans.lower():
-                st.success("18/20 +2 scans")
-                user['scans_bonus']+=2
-    with j3:
-        a,b=random.randint(1,10),random.randint(1,10)
-        r=st.number_input(f"{a}+{b} =?",step=1)
-        if st.button("Valider Calcul",key="q3"):
-            if r==a+b:
-                st.success("20/20 +2 scans")
-                user['scans_bonus']+=2
-
-elif menu=="👤 Profil":
-    st.header("Profil - Page 3")
-    if st.button("⬅️ Retour"): st.rerun()
-    photo=st.file_uploader("Ajouter photo profil",type=["png","jpg"])
-    if photo: user['photo']=photo
-    st.write(user)
-
-elif menu=="⚙️ Paramètres":
-    st.header("Paramètres")
-    if st.button("⬅️ Retour"): st.rerun()
-    new_pwd=st.text_input("Nouveau mot de passe",type="password")
-    if st.button("Sauvegarder"):
-        if new_pwd: user['pwd']=new_pwd
-        st.success("Sauvegardé")
-
-elif menu=="🥗 Aliments":
-    st.header("Guide Complet")
-    if st.button("⬅️ Retour au Scanner"): st.rerun()
-    t1,t2,t3=st.tabs(["✅ Halal","❌ Haram","⚠️ Douteux"])
-    with t1:
-        st.markdown("**Halal:** Fruits/légumes, Lait sans gélatine porc, Oeufs, Viandes bœuf/agneau/mouton/chèvre/volaille/lapin si abattu rituel islamique, Eau, jus non alcoolisés, poissons, miel")
-    with t2:
-        st.markdown("**Haram:** Porc et dérivés (jambon,bacon,saindoux,gélatine porcine), Sang, Alcool et boissons enivrantes, Animaux carnivores/rapaces, Animaux non abattus rite islamique")
-    with t3:
-        st.markdown("**Douteux:** Additifs/gélatines/arômes origine non précisée, E471,E472,E120,E441")
-
-elif menu=="📜 Ma Liste":
-    st.header("Ma Liste")
-    if st.button("⬅️ Retour"): st.rerun()
-    for item in user['my_list'][::-1]: st.write(f"{item['date']} - {item['produit']} => {item['resultat']}")
-
-elif menu=="💬 Aide & Commentaires":
-    st.header("Aide & Commentaires")
-    msg=st.text_area("Ton message")
-    if st.button("Envoyer"):
-        st.session_state.all_comments.append({"user":user['username'],"msg":msg,"date":datetime.now().strftime("%d/%m %H:%M")})
-        st.success("Envoyé!")
-    for c in st.session_state.all_comments[::-1]: st.write(f"**{c['user']}** ({c['date']}): {c['msg']}")
-
-elif menu=="📖 Notice":
-    st.header("Notice")
-    if st.button("⬅️ Retour"): st.rerun()
-    st.markdown("1. Inscris-toi Wave+Email 2. 5 essais 3. Scanne 4. Joue 18/20=+2 scans 5. VIP 1500F illimité 6. Pub=+1 scan")
-
-elif menu=="🎧 Coran Audio":
-    st.header("🎧 Coran - Imam Matroud")
-    st.info("⬇️ Télécharge avant utilisation")
-    coran_fatiha = "بسم الله الرحمن الرحيم - Al-Fatiha complète..."
-    st.write("**Sourate Al-Fatiha** - بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ")
-    st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
-    col1,col2=st.columns(2)
-    with col1: st.download_button("📥 Télécharger Texte Arabe", coran_fatiha, file_name="fatiha.txt", type="primary")
-    with col2: st.download_button("📥 Télécharger Audio (lien)", "https://example.com/coran.mp3", file_name="audio_coran_lien.txt")
-    st.divider()
-    st.write("**Sourate Al-Ikhlas** - قُلْ هُوَ اللَّهُ أَحَدٌ")
-    st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3")
-    st.download_button("📥 Télécharger Ikhlas", "قُلْ هُوَ اللَّهُ أَحَدٌ", file_name="ikhlas.txt")
-    if st.button("⬅️ Retour"): st.rerun()
-
-elif menu=="📚 Hadiths":
-    st.header("📚 Hadiths")
-    st.info("⬇️ Télécharge avant utilisation")
-    hadith_fr = "Hadith 1: Les actions ne valent que par les intentions\nHadith 2: Aime pour ton frère ce que tu aimes pour toi"
-    hadith_ar = "إنما الأعمال بالنيات"
-    st.text_area("FR", hadith_fr, height=100)
-    st.text_area("AR", hadith_ar, height=80)
-    st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3")
-    c1,c2=st.columns(2)
-    with c1: st.download_button("📥 Télécharger Hadiths TXT", hadith_fr+"\n"+hadith_ar, file_name="hadiths_complet.txt", type="primary")
-    with c2: st.download_button("📥 Télécharger Audio Hadiths", "lien audio", file_name="hadith_audio.txt")
-    if st.button("⬅️ Retour"): st.rerun()
-
-elif menu=="🤲 Douas du jour":
-    st.header("Douas du jour")
-    if st.button("⬅️ Retour"): st.rerun()
-    d=st.selectbox("Choisir", ["Au lever","Au coucher","Avant de manger","Après manger"])
-    douas={"Au lever":"الحمد لله الذي أحيانا","Au coucher":"باسمك اللهم أموت وأحيا","Avant de manger":"بسم الله","Après manger":"الحمد لله"}
-    st.write(douas[d])
-    st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3")
-    st.download_button("📥 Télécharger Douas", str(douas), file_name="douas.txt")
-
-elif menu=="🌐 Langue":
-    st.header("Langue")
-    if st.button("⬅️ Retour"): st.rerun()
-    l=st.selectbox("Choisir", ["Français","English","العربية"])
-    st.session_state.lang=l
-    st.success(f"Langue: {l}")
-
-elif menu=="Déconnexion":
-    st.session_state.current_user=None
-    st.rerun()
+else:
+    if st.button("⬅️ Retour Scanner"):
+        st.rerun()
+    if menu=="🎮 Zone de Jeux":
+        st.title("🎮 Zone de Jeux")
+        st.info("18/20 = 2 scans offerts")
+        q1 = st.radio("Le porc est Halal?", ["Non","Oui"], key="q1")
+        q2 = st.radio("Gelatine porcine?", ["Haram","Halal"], key="q2")
+        if st.button("Valider Quiz"):
+            score = (10 if q1=="Non" else 0)+(10 if q2=="Haram" else 0)
+            st.write(f"Score {score}/20")
+            if score>=18:
+                users[user_email]['bonus_scans']=users[user_email].get('bonus_scans',0)+2
+                save_json(USERS_FILE, users)
+                st.success("+2 scans offerts!")
+    elif menu=="👤 Mon Profil":
+        st.title("Mon Profil")
+        st.write(user.get('nom')); st.write(user.get('wave')); st.write(user_email)
+        ph = st.file_uploader("Photo de profil", type=['jpg','png'])
+        if ph: st.image(ph,width=120)
+    elif menu=="⚙️ Parametres":
+        st.title("Parametres")
+        nn = st.text_input("Nom", value=user.get('nom',''))
+        nw = st.text_input("Wave", value=user.get('wave',''))
+        np = st.text_input("Nouveau mdp", type="password")
+        if st.button("Sauvegarder"):
+            users[user_email]['nom']=nn; users[user_email]['wave']=nw
+            if np: users[user_email]['pwd']=np
+            save_json(USERS_FILE, users); st.success("Sauve")
+    elif menu=="🍎 Aliments":
+        st.title("Aliments")
+        t1,t2,t3 = st.tabs(["Halal","Haram","Douteux"])
+        with t1: st.write("Fruits, legumes, lait, oeufs, viandes boeuf/agneau/poulet abattues halal, eau, jus")
+        with t2: st.write("Porc, jambon, bacon, saindoux, gelatine porcine, sang, alcool, vin, biere, rapaces, bete morte non egorgee")
+        with t3: st.write("Additifs origine non precisee, gélatines aromes douteux, E471 etc")
+    elif menu=="📋 Ma Liste":
+        st.title("Ma Liste - Historique")
+        for h in reversed(user.get('history',[])):
+            st.markdown(f"<div class='card'>{h['date']} - {h['result']} - {h['detail']}</div>", unsafe_allow_html=True)
+    elif menu=="💬 Aide & Commentaires":
+        st.title("Aide")
+        m = st.text_area("Ton message")
+        if st.button("Envoyer"):
+            comments.append({'email':user_email,'nom':user.get('nom'),'msg':m,'date':datetime.now().isoformat()})
+            save_json(COMMENTS_FILE, comments); st.success("Envoye - Je te repondrai")
+    elif menu=="📖 Notice":
+        st.title("Notice")
+        st.write("1. Inscris-toi 2. Scanne 5 fois gratuit 3. VIP ou pub 4. Menu pour tout")
+    elif menu=="🌐 Langue":
+        st.title("Langue")
+        st.selectbox("Langue", ["Francais","English","العربية"])
+    elif menu=="🎧 Coran - Imam Matroud":
+        st.title("Coran Imam Matroud")
+        if st.button("📥 Telecharger Coran"): st.success("Telecharge (simulation)")
+        st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
+        st.write("الفاتحة")
+    elif menu=="📜 Hadiths":
+        st.title("Hadiths")
+        if st.button("📥 Telecharger Hadiths"): st.success("Telecharge")
+        st.markdown("<div class='card'>Les actions ne valent que par les intentions - Bukhari</div>", unsafe_allow_html=True)
+    elif menu=="🤲 Douas du Jour":
+        st.title("Douas du Jour")
+        st.markdown("Au lever: الحمد لله الذي أحيانا | Avant manger: بسم الله | Au coucher: باسمك اللهم أموت وأحيا")
