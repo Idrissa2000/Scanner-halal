@@ -3,15 +3,40 @@ import json
 import os
 import random
 import re
-from datetime import datetime
+from datetime import datetime, date
 import time
+import base64
+from PIL import Image
 
 WAVE_LINK = "https://pay.wave.com/m/M_ci_bqKBEWPbP0OO/c/ci/?amount=1500"
 USERS_FILE = "users.json"
 COMMENTS_FILE = "commentaires.json"
 SONDAGE_FILE = "sondages.json"
+PROFILE_FOLDER = "profile_pics"
+COVER_FOLDER = "cover_pics"
+os.makedirs(PROFILE_FOLDER, exist_ok=True)
+os.makedirs(COVER_FOLDER, exist_ok=True)
 
-# ========== LISTES COMPLETES SANS RACCOURCI ==========
+def save_image(file, folder, email, prefix):
+    try:
+        ext = file.name.split(".")[-1]
+        safe_email = email.replace("@","_").replace(".","_")
+        path = os.path.join(folder, f"{safe_email}_{prefix}.{ext}")
+        with open(path, "wb") as f:
+            f.write(file.getbuffer())
+        return path
+    except:
+        return None
+
+def get_image_base64(path):
+    if path and os.path.exists(path):
+        try:
+            with open(path, "rb") as f:
+                return base64.b64encode(f.read()).decode()
+        except:
+            return None
+    return None
+
 ALIMENTS_HALAL = [
     "Poulet halal egorge selon islam","Boeuf halal egorge","Mouton halal egorge","Chevre halal egorge","Chameau halal","Dinde halal","Canard halal","Lapin halal",
     "Poisson tout type hareng thon sardine maquereau carpe tilapia capitaine","Crevettes halal","Crabe halal","Homard halal","Calamar halal",
@@ -307,16 +332,14 @@ st.set_page_config(page_title="Scanner Halal", page_icon="🕌", layout="centere
 st.markdown("""
 <style>
 #MainMenu{visibility:hidden} footer{visibility:hidden} header{visibility:hidden}
-.block-container{padding-top:10px; padding-bottom:90px;}
+.block-container{padding-top:10px; padding-bottom:120px;}
 .card-dark{background:#0f1e4a; color:white; margin:8px 0px; padding:12px; border-radius:12px; display:flex; align-items:center; gap:12px; border:1px solid #1e3a8a}
 .card{background:white; margin:8px 0px; padding:15px; border-radius:12px; border:1px solid #eee; box-shadow:0 2px 4px rgba(0,0,0,0.05)}
 .card-vip{background:linear-gradient(135deg,#0a2a6b,#1a4bb8);color:white;padding:25px;border-radius:15px;margin:12px 0px; text-align:center}
 .card-pub{background:#fff3e0;border:2px dashed #ff9800;padding:15px;border-radius:12px;margin:12px 0px}
-.bottom-nav{position:fixed; bottom:0; left:0; right:0; background:white; display:flex; justify-content:space-around; padding:10px 0; border-top:1px solid #eee; z-index:1000}
-.pub-zone{position:fixed; bottom:55px; left:0; right:0; background:black; color:white; text-align:center; padding:6px; font-size:12px; z-index:999}
+.pub-zone{background:black; color:white; text-align:center; padding:6px; font-size:12px; border-radius:8px; margin-bottom:10px}
 .pub-zone a{color:#00D1FF; text-decoration:none}
 .sondage-card{background:white; margin:8px 0px; padding:15px; border-radius:12px; border-left:5px solid #0072ff}
-.top-photo-zone{background: linear-gradient(90deg,#00c6ff,#0072ff); padding:12px; display:flex; align-items:center; gap:10px; color:white; border-radius:12px; margin-bottom:10px}
 </style>
 """, unsafe_allow_html=True)
 
@@ -332,6 +355,8 @@ if 'sondage_answers' not in st.session_state:
     st.session_state.sondage_answers={}
 if 'show_eval' not in st.session_state:
     st.session_state.show_eval=False
+if 'bottom_nav' not in st.session_state:
+    st.session_state.bottom_nav="Home"
 
 if st.session_state.page=="auth":
     try:
@@ -371,7 +396,7 @@ if st.session_state.page=="auth":
             elif er in users:
                 st.error("Email deja utilise va dans Connexion")
             else:
-                users[er]={'nom':nom,'wave':f"{extract_code(pays)} {numero}",'pays':pays,'pwd':p1,'scans':0,'is_vip':False,'history':[],'sondage_history':[],'bonus_scans':0}
+                users[er]={'nom':nom,'wave':f"{extract_code(pays)} {numero}",'pays':pays,'pwd':p1,'scans':0,'is_vip':False,'history':[],'sondage_history':[],'bonus_scans':0,'profile_pic':None,'cover_pic':None}
                 save_json(USERS_FILE,users)
                 st.success("Compte cree! Va dans Connexion")
                 st.balloons()
@@ -407,23 +432,69 @@ if not st.session_state.user or st.session_state.user not in users:
 
 user_email=st.session_state.user
 user=users[user_email]
-
+if 'profile_pic' not in user:
+    users[user_email]['profile_pic']=None
+    users[user_email]['cover_pic']=None
+    save_json(USERS_FILE,users)
 if 'sondage_history' not in user:
     users[user_email]['sondage_history']=[]
     save_json(USERS_FILE,users)
 
+# ===== TOP AVEC PHOTO PROFIL + COUVERTURE + NOM SEULEMENT =====
+profile_path = user.get('profile_pic')
+cover_path = user.get('cover_pic')
+cover_b64 = get_image_base64(cover_path)
+profile_b64 = get_image_base64(profile_path)
+if cover_b64:
+    cover_style = f"background-image: url(data:image/jpeg;base64,{cover_b64}); background-size: cover; background-position: center;"
+else:
+    cover_style = "background: linear-gradient(90deg,#00c6ff,#0072ff);"
+if profile_b64:
+    profile_html = f"<img src='data:image/jpeg;base64,{profile_b64}' style='width:70px; height:70px; border-radius:50%; border:3px solid white; object-fit:cover;'>"
+else:
+    profile_html = "<div style='width:70px; height:70px; border-radius:50%; background:white; display:flex; align-items:center; justify-content:center; font-size:30px; border:3px solid white;'>👤</div>"
+
 st.markdown(f"""
-<div class="top-photo-zone">
-<div style="width:45px; height:45px; border-radius:50%; background:white; display:flex; align-items:center; justify-content:center; font-size:22px;">📸</div>
-<div><b>Scanner Halal</b><br><small>Ajout photo ici</small></div>
-<div style="margin-left:auto; background:gold; color:black; padding:4px 10px; border-radius:15px; font-size:11px; font-weight:bold;">{"VIP" if user.get('is_vip') else "Gratuit"}</div>
+<div style="{cover_style} padding:15px; border-radius:12px; margin-bottom:10px; position:relative; min-height:90px;">
+<div style="display:flex; align-items:center; gap:12px; background:rgba(0,0,0,0.4); padding:10px; border-radius:10px;">
+{profile_html}
+<div style="color:white;">
+<b style="font-size:20px;">{user.get('nom','Utilisateur')}</b><br>
+<span style="background:gold; color:black; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:bold;">{"VIP ILLIMITE" if user.get('is_vip') else "GRATUIT"}</span>
+</div>
+</div>
 </div>
 <div class="pub-zone">PUB - <a href="{WAVE_LINK}" target="_blank">Deviens VIP 1500F - Payer Wave</a></div>
 """, unsafe_allow_html=True)
 
+with st.expander("📸 Changer photo de profil et couverture"):
+    col_p1, col_p2 = st.columns(2)
+    with col_p1:
+        new_profile = st.file_uploader("Photo de profil", type=['jpg','png','jpeg'], key="profile_upload")
+        if new_profile:
+            path = save_image(new_profile, PROFILE_FOLDER, user_email, "profile")
+            if path:
+                users[user_email]['profile_pic'] = path
+                save_json(USERS_FILE, users)
+                st.success("Photo de profil ajoutée!")
+                time.sleep(1)
+                st.rerun()
+    with col_p2:
+        new_cover = st.file_uploader("Photo de couverture", type=['jpg','png','jpeg'], key="cover_upload")
+        if new_cover:
+            path = save_image(new_cover, COVER_FOLDER, user_email, "cover")
+            if path:
+                users[user_email]['cover_pic'] = path
+                save_json(USERS_FILE, users)
+                st.success("Photo de couverture ajoutée!")
+                time.sleep(1)
+                st.rerun()
+
 with st.sidebar:
     st.markdown("### Menu")
-    st.write(f"Nom: {user.get('nom','')}")
+    if profile_path and os.path.exists(profile_path):
+        st.image(profile_path, width=80)
+    st.write(f"**{user.get('nom','')}**")
     menu=st.radio("NAVIGATION", ["Home","Aliments","Ma Liste","Jeu","Profil","Parametres","Aide","Notice","Langue","Coran","Hadiths","Douas"], label_visibility="collapsed")
     if st.button("Deconnexion", use_container_width=True):
         st.session_state.user=None
@@ -431,6 +502,7 @@ with st.sidebar:
         st.session_state.scan_mode=None
         st.session_state.sondage_answers={}
         st.session_state.show_eval=False
+        st.session_state.bottom_nav="Home"
         st.rerun()
 
 def vip_required_page(nom_page):
@@ -451,7 +523,68 @@ def vip_required_page(nom_page):
         st.rerun()
     st.stop()
 
+# ===== BOTTOM NAV CLICABLE =====
 if menu=="Home":
+    # Bottom nav buttons
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        if st.button("🏠 Home", use_container_width=True, type="primary" if st.session_state.bottom_nav=="Home" else "secondary"):
+            st.session_state.bottom_nav="Home"
+            st.rerun()
+    with c2:
+        if st.button("🕋 Qibla", use_container_width=True, type="primary" if st.session_state.bottom_nav=="Qibla" else "secondary"):
+            st.session_state.bottom_nav="Qibla"
+            st.rerun()
+    with c3:
+        if st.button("📅 Calendrier", use_container_width=True, type="primary" if st.session_state.bottom_nav=="Calendrier" else "secondary"):
+            st.session_state.bottom_nav="Calendrier"
+            st.rerun()
+    with c4:
+        if st.button("➕ Plus", use_container_width=True):
+            st.session_state.bottom_nav="Plus"
+            st.rerun()
+
+    if st.session_state.bottom_nav=="Qibla":
+        st.title("🕋 Qibla - Direction Kaaba")
+        st.markdown("""
+        <div class='card' style='text-align:center'>
+        <div style='font-size:80px;'>🧭</div>
+        <h2>Direction de la Qibla</h2>
+        <p><b>Kaaba - La Mecque</b><br>21.3891° N, 39.8579° E</p>
+        <p>Depuis Abidjan, Cote d'Ivoire :<br><b>Environ 65° Nord-Est</b></p>
+        <p style='background:#0a2a6b; color:white; padding:10px; border-radius:10px;'>Place ton telephone a plat et tourne-toi vers le Nord-Est</p>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Retour Home", use_container_width=True):
+            st.session_state.bottom_nav="Home"
+            st.rerun()
+        st.stop()
+    elif st.session_state.bottom_nav=="Calendrier":
+        st.title("📅 Calendrier Hijri / Gregorien")
+        today = date.today()
+        st.markdown(f"""
+        <div class='card' style='background:linear-gradient(90deg,#0a2a6b,#1a4bb8); color:white'>
+        <h3>Aujourd'hui</h3>
+        <p><b>Gregorien :</b> {today.strftime('%d/%m/%Y')}</p>
+        <p><b>Hijri (approx) :</b> 2026 - Calcul approximatif</p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("<div class='card'><b>Prochains evenements islamiques 2026 :</b><br>🌙 Ramadan : Fevrier 2026<br>🕋 Aid al-Fitr : Mars 2026<br>🕋 Aid al-Adha : Mai 2026<br>📅 Mouharram 1448 : Juin 2026</div>", unsafe_allow_html=True)
+        mois = st.selectbox("Choisir mois Gregorien", ["Janvier","Fevrier","Mars","Avril","Mai","Juin","Juillet","Aout","Septembre","Octobre","Novembre","Decembre"])
+        st.write(f"Tu as choisi : {mois} 2026")
+        if st.button("Retour Home", use_container_width=True):
+            st.session_state.bottom_nav="Home"
+            st.rerun()
+        st.stop()
+    elif st.session_state.bottom_nav=="Plus":
+        st.title("➕ Plus d'options")
+        st.markdown("<div class='card'>Acces rapide :<br>• Aliments VIP<br>• Coran 114 Gratuit<br>• Jeu 20Q<br>• Profil</div>", unsafe_allow_html=True)
+        if st.button("Retour Home", use_container_width=True):
+            st.session_state.bottom_nav="Home"
+            st.rerun()
+        st.stop()
+
+    # PAGE HOME NORMALE
     st.markdown("""<div style="background:linear-gradient(90deg,#00c6ff,#0072ff); padding:15px; color:white; border-radius:12px; margin-bottom:10px"><b>Bienvenue sur Scanner Halal</b><br><small>Scanner tes produits halal facilement</small></div>""", unsafe_allow_html=True)
     scans_used = user['scans'] - user.get('bonus_scans',0)
     if not user['is_vip'] and scans_used>=5:
@@ -470,25 +603,32 @@ if menu=="Home":
         st.stop()
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("CAMERA", type="primary", use_container_width=True):
+        if st.button("📷 CAMERA", type="primary", use_container_width=True, key="btn_camera"):
             st.session_state.scan_mode="camera"
             st.rerun()
     with col2:
-        if st.button("UPLOAD", type="primary", use_container_width=True):
+        if st.button("🖼️ UPLOAD", type="primary", use_container_width=True, key="btn_upload"):
             st.session_state.scan_mode="upload"
             st.rerun()
     photo = None
     if st.session_state.scan_mode=="camera":
-        cam = st.camera_input("Prends photo")
+        st.info("Mode Camera - Autorise la camera en haut du navigateur")
+        cam = st.camera_input("Clique ici pour prendre photo", key="camera_input")
         if cam:
             photo = cam
+            st.success("Photo prise!")
     elif st.session_state.scan_mode=="upload":
-        up = st.file_uploader("Choisis photo depuis galerie", type=['jpg','png','jpeg'], label_visibility="collapsed")
+        st.info("Mode Upload - Choisis depuis ton PC / Telephone")
+        up = st.file_uploader("Clique ici pour choisir photo (JPG, PNG)", type=['jpg','png','jpeg','webp'], key="uploader")
         if up:
             photo = up
+            st.success("Photo ajoutée!")
+    else:
+        st.warning("Clique d'abord sur CAMERA ou UPLOAD")
     if photo:
-        st.image(photo, use_container_width=True)
-        if st.button("LANCER LE SCAN HALAL", type="primary", use_container_width=True):
+        st.image(photo, caption="Photo ajoutée", use_container_width=True)
+        st.markdown("---")
+        if st.button("✅ LANCER LE SCAN HALAL MAINTENANT", type="primary", use_container_width=True):
             with st.spinner("Analyse Halal en cours..."):
                 time.sleep(2)
                 if not user['is_vip']:
@@ -507,6 +647,15 @@ if menu=="Home":
                 users[user_email]['history'].append({'date':datetime.now().strftime("%d/%m/%Y %H:%M"),'result':result,'detail':detail})
                 save_json(USERS_FILE,users)
                 st.balloons()
+                # ETEINT CAMERA APRES SCAN
+                st.session_state.scan_mode = None
+                if "camera_input" in st.session_state:
+                    del st.session_state["camera_input"]
+                if "uploader" in st.session_state:
+                    del st.session_state["uploader"]
+                st.success("Camera eteinte - Scan termine")
+                time.sleep(1)
+                st.rerun()
 
 elif menu=="Jeu":
     st.title("Jeu - 20 Questions")
@@ -608,16 +757,29 @@ elif menu=="Hadiths":
 
 elif menu=="Profil":
     st.title("Profil Complet")
-    st.markdown(f"<div class='card'>Nom: {user.get('nom')}<br>Wave: {user.get('wave')}<br>Pays: {user.get('pays')}<br>Email: {user_email}<br>VIP: {'Oui VIP Illimite' if user.get('is_vip') else 'Non'}<br>Scans: {user.get('scans')}<br>Bonus: {user.get('bonus_scans',0)}<br>Total scans: {len(user.get('history',[]))}<br>Total Jeu: {len(user.get('sondage_history',[]))}<br></div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='card'>Nom: {user.get('nom')}<br>Wave: {user.get('wave')}<br>Pays: {user.get('pays')}<br>VIP: {'Oui VIP Illimite' if user.get('is_vip') else 'Non'}<br>Scans: {user.get('scans')}<br>Bonus: {user.get('bonus_scans',0)}<br>Total scans: {len(user.get('history',[]))}<br>Total Jeu: {len(user.get('sondage_history',[]))}<br></div>", unsafe_allow_html=True)
     new_nom=st.text_input("Changer nom", value=user.get('nom',''))
-    if st.button("Sauvegarder"):
+    if st.button("Sauvegarder nom"):
         users[user_email]['nom']=new_nom
         save_json(USERS_FILE,users)
-        st.success("Sauvegarde")
+        st.success("Nom sauvegarde")
+        st.rerun()
 
 elif menu=="Parametres":
     st.title("Parametres")
-    st.markdown("<div class='card'><b>Version:</b> FINAL V25 CORAN GRATUIT<br><b>Dev:</b> Idrissa<br><b>VIP:</b> Aliments 150 + Douas 50 + Hadiths 40<br><b>Gratuit:</b> Scanner + Coran 114 + Jeu 20Q + Ma Liste</div>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class='card'>
+    <b>Version:</b> FINAL V27 COMPLET<br>
+    <b>Dev:</b> Idrissa<br>
+    <b>Nom:</b> {user.get('nom')}<br>
+    <b>Email:</b> {user_email}<br>
+    <b>Wave:</b> {user.get('wave')}<br>
+    <b>Pays:</b> {user.get('pays')}<br>
+    <b>VIP:</b> {'Oui Illimite' if user.get('is_vip') else 'Non - 5 essais'}<br>
+    <b>VIP Contenu:</b> Aliments 150 + Douas 50 + Hadiths 40<br>
+    <b>Gratuit:</b> Scanner + Coran 114 + Jeu 20Q + Ma Liste + Qibla + Calendrier<br>
+    </div>
+    """, unsafe_allow_html=True)
 
 elif menu=="Aide":
     st.title("Aide & Commentaires")
@@ -630,14 +792,15 @@ elif menu=="Aide":
 
 elif menu=="Notice":
     st.title("Notice Complete")
-    st.markdown("""<div class='card'><h3>Guide Complet Scanner Halal FINAL V25 CORAN GRATUIT</h3>
+    st.markdown("""<div class='card'><h3>Guide Complet Scanner Halal FINAL V27</h3>
     <b>1. Inscription:</b> Nom, Pays, Numero, Email, Mot de passe (lettres+chiffres) ex baba2000, Confirmer -> Creer<br>
-    <b>2. Connexion:</b> Email + Mot de passe (lettres+chiffres)<br>
-    <b>3. Home:</b> 2 boutons CAMERA et UPLOAD -> Photo ingredients -> LANCER SCAN -> Resultat HALAL HARAM DOUTEUX - 5 essais gratuits<br>
-    <b>4. Gratuit:</b> Coran 114 sourates gratuit, Jeu 20Q gratuit, Ma Liste gratuit<br>
-    <b>5. VIP 1500F:</b> Aliments 150, Douas 50, Hadiths 40 -> Devenez VIP avant de voir - Payer Wave<br>
-    <b>6. Jeu:</b> 20 questions -> Valider -> Evaluation -> Stocke historique -> Auto-renew 5s<br>
-    <b>7. Coran:</b> Gratuit pour tous - 114 sourates detaillees<br>
+    <b>2. Connexion:</b> Email + Mot de passe<br>
+    <b>3. Top:</b> Photo couverture + Photo profil ronde + Nom utilisateur (pas email) + Badge VIP<br>
+    <b>4. Home:</b> Boutons Qibla Calendrier cliquables -> CAMERA UPLOAD -> Photo -> LANCER SCAN -> Resultat -> Camera eteinte auto<br>
+    <b>5. Gratuit:</b> Coran 114, Jeu 20Q, Ma Liste, Qibla, Calendrier<br>
+    <b>6. VIP 1500F:</b> Aliments 150, Douas 50, Hadiths 40 -> Devenez VIP avant de voir<br>
+    <b>7. Jeu:</b> 20Q -> Valider -> Evaluation -> Stocke -> Auto 5s<br>
+    <b>8. Parametres:</b> Email affiche ici seulement<br>
     </div>""", unsafe_allow_html=True)
 
 elif menu=="Langue":
@@ -651,12 +814,3 @@ elif menu=="Langue":
 else:
     st.title(menu)
     st.write(f"Contenu {menu} integre complet")
-
-st.markdown("""
-<div class="bottom-nav">
-<div style="text-align:center; color:#0a2a6b; font-weight:bold; background:#e8f0fe; border-radius:20px; padding:5px 15px">Home</div>
-<div style="text-align:center; font-size:12px;">Qibla</div>
-<div style="text-align:center; font-size:12px;">Calendrier</div>
-<div style="text-align:center; font-size:12px;">Plus</div>
-</div>
-""", unsafe_allow_html=True)
