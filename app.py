@@ -61,14 +61,12 @@ def get_image_base64(path):
     return None
 
 def show_back_button():
-    if st.button("⬅️ Retour Home", use_container_width=True):
+    if st.button("⬅️", key=f"back_{st.session_state.bottom_nav}"):
         st.session_state.bottom_nav = "Home"
         st.rerun()
 
 def share_zone():
-    st.markdown("### 📢 Partager l'app")
-    st.code(APP_LINK)
-    st.link_button("📤 Partager sur WhatsApp", f"https://wa.me/?text=Decouvre Scanner Halal {APP_LINK}", use_container_width=True)
+    st.link_button("📤 Partager l'app", f"https://wa.me/?text=Decouvre Scanner Halal {APP_LINK}", use_container_width=True)
 
 ALIMENTS_HALAL = [
     "Poulet halal egorge selon islam","Boeuf halal egorge","Mouton halal egorge","Chevre halal egorge","Chameau halal","Dinde halal","Canard halal","Lapin halal",
@@ -150,7 +148,7 @@ users=load_json(USERS_FILE,{})
 comments=load_json(COMMENTS_FILE,[])
 sondages=load_json(SONDAGE_FILE,[])
 
-st.set_page_config(page_title="Scanner Halal V34", page_icon="🕌", layout="centered")
+st.set_page_config(page_title="Scanner Halal V34.1", page_icon="🕌", layout="centered")
 st.markdown("""
 <style>
 #MainMenu{visibility:hidden} footer{visibility:hidden} header{visibility:hidden}
@@ -175,7 +173,7 @@ if 'ad_start_time' not in st.session_state: st.session_state.ad_start_time=None
 if st.session_state.page=="auth":
     try: st.image("logo.jpeg", use_container_width=True)
     except: st.markdown("<h1 style='text-align:center;'>🕌 Scanner Halal</h1>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center;color:#0a2a6b;'>Bienvenue V34</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;color:#0a2a6b;'>Bienvenue V34.1</h2>", unsafe_allow_html=True)
     t1,t2,t3=st.tabs(["Connexion","Inscription","Mot de passe oublie"])
     with t1:
         e=st.text_input("Email", key="email_connexion").strip()
@@ -249,7 +247,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# PUB ROUGE
 if st.session_state.bottom_nav=="Home":
     st.markdown(f"""
     <div style="background:#0a1433; padding:10px; display:flex; justify-content:center; margin-bottom:10px; border-radius:8px;">
@@ -305,19 +302,18 @@ if menu=="Home":
             st.session_state.bottom_nav="Calendrier"; st.rerun()
 
     if st.session_state.bottom_nav in ["VIP_ALIMENTS", "VIP_DOUAS", "VIP_HADITHS"]:
+        show_back_button()
         nom = st.session_state.bottom_nav.replace("VIP_","")
         st.markdown(f"""<div class="card-vip"><h2 style="color:gold;">{nom} - VIP Seulement</h2></div>""", unsafe_allow_html=True)
         st.link_button(f"PAYER 1500F WAVE POUR {nom}", WAVE_LINK, type="primary", use_container_width=True)
         if st.button("J'ai paye - Activer VIP", use_container_width=True):
             users[user_email]['is_vip']=True; save_json(USERS_FILE,users); st.balloons(); st.session_state.bottom_nav="Home"; st.rerun()
-        if st.button("Retour Home", use_container_width=True):
-            st.session_state.bottom_nav="Home"; st.rerun()
         st.stop()
 
     if st.session_state.bottom_nav=="Qibla":
         show_back_button()
         st.title("🧭 Qibla - 4 formats non bloquants")
-        st.info("GPS facultatif - tu peux entrer manuellement, pas bloquant")
+        st.info("GPS facultatif - tu peux entrer manuellement")
         lat=st.number_input("Latitude",value=5.36)
         lon=st.number_input("Longitude",value=-4.00)
         tab1,tab2,tab3,tab4=st.tabs(["Classique","Moderne","Rose","Numérique"])
@@ -329,23 +325,46 @@ if menu=="Home":
 
     elif st.session_state.bottom_nav=="Calendrier":
         show_back_button()
-        st.title("📅 Calendrier Double Côte à Côte - V34")
+        st.title("📅 Calendrier")
         today = date.today()
         d_h, m_h, y_h = gregorian_to_hijri(today)
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown(f"""<div style="background:white; padding:15px; border-radius:12px; border-left:5px solid #0072ff"><b>🌍 Grégorien</b><br><h3>{today.strftime('%d %B %Y')}</h3><pre>{calendar.month(today.year, today.month)}</pre></div>""", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div style="background:white; padding:15px; border-radius:12px; border:1px solid #eee; text-align:center">
+            <b>🌍 Grégorien</b><br>
+            <span style="font-size:32px; font-weight:bold; color:#0a2a6b">{today.day}</span><br>
+            <b>{today.strftime('%B')}</b> {today.year}<br>
+            <small style="color:gray">{today.strftime('%A')}</small>
+            </div>""", unsafe_allow_html=True)
+            st.text(calendar.month(today.year, today.month))
         with col2:
-            st.markdown(f"""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); padding:15px; border-radius:12px; color:white"><b style="color:gold">🌙 Hijri</b><br><h3 style="color:white">{d_h} {HIJRI_MONTHS[m_h-1]} {y_h} H</h3><p>{d_h} {HIJRI_MONTHS[m_h-1]} {y_h} AH</p><p>Ramadan 1447 / 2026</p></div>""", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); padding:15px; border-radius:12px; color:white; text-align:center; min-height:190px">
+            <b style="color:gold">🌙 Hijri</b><br>
+            <span style="font-size:32px; font-weight:bold">{d_h}</span><br>
+            <b style="color:gold; font-size:18px">{HIJRI_MONTHS[m_h-1]}</b><br>
+            <b>{y_h} AH</b>
+            </div>""", unsafe_allow_html=True)
+        st.markdown("---")
+        st.subheader("🕌 Événements 2026")
+        st.markdown("""
+        <div style="background:white; padding:12px; border-radius:12px; border-left:5px solid #00a651">
+        🌙 <b>Ramadan 1447</b> : 18 Février 2026<br>
+        🎉 <b>Aïd al-Fitr</b> : 20 Mars 2026<br>
+        🕋 <b>Aïd al-Adha</b> : 27 Mai 2026<br>
+        📅 <b>Mouharram 1448</b> : 16 Juin 2026<br>
+        🌟 <b>Mawlid</b> : 25 Août 2026
+        </div>""", unsafe_allow_html=True)
+        st.markdown("---")
         share_zone()
         st.stop()
 
-    st.markdown("""<div style="background:linear-gradient(90deg,#00c6ff,#0072ff); padding:15px; color:white; border-radius:12px; margin-bottom:10px"><b>Bienvenue Scanner Halal V34</b><br><small>Double calendrier + Qibla 4 formats + Partage</small></div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="background:linear-gradient(90deg,#00c6ff,#0072ff); padding:15px; color:white; border-radius:12px; margin-bottom:10px"><b>Bienvenue Scanner Halal V34.1</b></div>""", unsafe_allow_html=True)
 
-    # Scanner logic
     scans_used = user['scans'] - user.get('bonus_scans',0)
     if not user['is_vip'] and scans_used>=5:
-        st.error("🚫 5 essais gratuits utilises - Regarde PUB ou VIP")
+        st.error("🚫 5 essais gratuits utilises")
         c_a, c_b = st.columns(2)
         with c_a:
             if st.button("📺 PUB 15s = +1 SCAN", use_container_width=True):
@@ -463,7 +482,7 @@ elif menu=="Aliments":
             if s in a.lower() or not s: st.markdown(f"<div class='card' style='border-left:5px solid orange'>DOUTEUX {a}</div>", unsafe_allow_html=True)
 
 elif menu=="Coran":
-    st.title("Coran 114 Sourates - Gratuit")
+    st.title("Coran 114 Sourates")
     q=st.text_input("Chercher sourate").lower()
     for s in SOURATES_114:
         if q in s.lower() or not q: st.markdown(f"<div class='card-dark'><b>{s}</b></div>", unsafe_allow_html=True)
@@ -482,5 +501,18 @@ elif menu=="Hadiths":
 elif menu=="Profil":
     st.title("Profil")
     st.write(user)
+
+elif menu=="Parametres":
+    st.title("Parametres")
+    st.markdown(f"""<div class='card'><b>Version:</b> V34.1 Propre<br><b>Nom:</b> {user.get('nom')}<br><b>Email:</b> {user_email}<br><b>Wave:</b> {user.get('wave')}<br><b>VIP:</b> {'Oui' if user.get('is_vip') else 'Non'}<br></div>""", unsafe_allow_html=True)
+    st.markdown("---")
+    st.subheader("📤 Partager l'app")
+    st.write("Le lien est caché ici uniquement")
+    if st.button("Afficher le lien de partage"):
+        st.code(APP_LINK)
+        st.link_button("Partager sur WhatsApp", f"https://wa.me/?text=Decouvre Scanner Halal {APP_LINK}", use_container_width=True)
+
+elif menu=="Aide":
+    st.title("Aide"); st.write("Aide")
 else:
     st.title(menu)
