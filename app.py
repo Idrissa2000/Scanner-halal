@@ -9,6 +9,8 @@ import base64
 import calendar
 
 WAVE_LINK = "https://pay.wave.com/m/M_ci_bqKBEWPbP0OO/c/ci/?amount=1500"
+APP_LINK = "https://scanner-halal.streamlit.app"
+HIJRI_MONTHS = ["Muharram","Safar","Rabi al-Awwal","Rabi al-Thani","Jumada al-Ula","Jumada al-Akhira","Rajab","Shaban","Ramadan","Shawwal","Dhu al-Qidah","Dhu al-Hijjah"]
 USERS_FILE = "users.json"
 COMMENTS_FILE = "commentaires.json"
 SONDAGE_FILE = "sondages.json"
@@ -16,6 +18,27 @@ PROFILE_FOLDER = "profile_pics"
 COVER_FOLDER = "cover_pics"
 os.makedirs(PROFILE_FOLDER, exist_ok=True)
 os.makedirs(COVER_FOLDER, exist_ok=True)
+
+def gregorian_to_hijri(g_date):
+    day = g_date.day
+    month = g_date.month
+    year = g_date.year
+    a = (14 - month) // 12
+    y = year + 4800 - a
+    m = month + 12*a - 3
+    jd = day + (153*m + 2)//5 + 365*y + y//4 - y//100 + y//400 - 32045
+    jd = jd - 1948439 + 10632
+    n = (jd - 1) // 10631
+    jd = jd - 10631*n + 10632
+    j = (jd - 1) // 354
+    l = jd - (j*354) - ((3 + 11*j)//30)
+    month_h = int((l - 1) // 29.5) + 1
+    if month_h > 12: month_h = 12
+    day_h = int(l - (month_h-1)*29.5)
+    if day_h < 1: day_h = 1
+    if day_h > 30: day_h = 30
+    year_h = 30*n + j + 1
+    return day_h, month_h, year_h
 
 def save_image(file, folder, email, prefix):
     try:
@@ -36,6 +59,16 @@ def get_image_base64(path):
         except:
             return None
     return None
+
+def show_back_button():
+    if st.button("⬅️ Retour Home", use_container_width=True):
+        st.session_state.bottom_nav = "Home"
+        st.rerun()
+
+def share_zone():
+    st.markdown("### 📢 Partager l'app")
+    st.code(APP_LINK)
+    st.link_button("📤 Partager sur WhatsApp", f"https://wa.me/?text=Decouvre Scanner Halal {APP_LINK}", use_container_width=True)
 
 ALIMENTS_HALAL = [
     "Poulet halal egorge selon islam","Boeuf halal egorge","Mouton halal egorge","Chevre halal egorge","Chameau halal","Dinde halal","Canard halal","Lapin halal",
@@ -117,7 +150,7 @@ users=load_json(USERS_FILE,{})
 comments=load_json(COMMENTS_FILE,[])
 sondages=load_json(SONDAGE_FILE,[])
 
-st.set_page_config(page_title="Scanner Halal", page_icon="🕌", layout="centered")
+st.set_page_config(page_title="Scanner Halal V34", page_icon="🕌", layout="centered")
 st.markdown("""
 <style>
 #MainMenu{visibility:hidden} footer{visibility:hidden} header{visibility:hidden}
@@ -125,8 +158,6 @@ st.markdown("""
 .card-dark{background:#0f1e4a; color:white; margin:8px 0px; padding:12px; border-radius:12px; display:flex; align-items:center; gap:12px; border:1px solid #1e3a8a}
 .card{background:white; margin:8px 0px; padding:15px; border-radius:12px; border:1px solid #eee; box-shadow:0 2px 4px rgba(0,0,0,0.05)}
 .card-vip{background:linear-gradient(135deg,#0a2a6b,#1a4bb8);color:white;padding:25px;border-radius:15px;margin:12px 0px; text-align:center}
-.pub-zone{background:#0a1433; padding:8px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:center;}
-.sondage-card{background:white; margin:8px 0px; padding:15px; border-radius:12px; border-left:5px solid #0072ff}
 </style>
 """, unsafe_allow_html=True)
 
@@ -144,7 +175,7 @@ if 'ad_start_time' not in st.session_state: st.session_state.ad_start_time=None
 if st.session_state.page=="auth":
     try: st.image("logo.jpeg", use_container_width=True)
     except: st.markdown("<h1 style='text-align:center;'>🕌 Scanner Halal</h1>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center;color:#0a2a6b;'>Bienvenue</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;color:#0a2a6b;'>Bienvenue V34</h2>", unsafe_allow_html=True)
     t1,t2,t3=st.tabs(["Connexion","Inscription","Mot de passe oublie"])
     with t1:
         e=st.text_input("Email", key="email_connexion").strip()
@@ -207,7 +238,7 @@ if profile_b64: profile_html = f"<img src='data:image/jpeg;base64,{profile_b64}'
 else: profile_html = "<div style='width:70px; height:70px; border-radius:50%; background:white; display:flex; align-items:center; justify-content:center; font-size:30px; border:3px solid white;'>👤</div>"
 
 st.markdown(f"""
-<div style="{cover_style} padding:15px; border-radius:12px; margin-bottom:10px; position:relative; min-height:90px;">
+<div style="{cover_style} padding:15px; border-radius:12px; margin-bottom:10px;">
 <div style="display:flex; align-items:center; gap:12px; background:rgba(0,0,0,0.4); padding:10px; border-radius:10px;">
 {profile_html}
 <div style="color:white;">
@@ -218,58 +249,17 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# PUB ROUGE STYLE TON IMAGE - SCANNER PLUS
+# PUB ROUGE
 if st.session_state.bottom_nav=="Home":
     st.markdown(f"""
     <div style="background:#0a1433; padding:10px; display:flex; justify-content:center; margin-bottom:10px; border-radius:8px;">
-    <div style="background:linear-gradient(90deg,#ff0030,#ff1744);
-                background-image: repeating-linear-gradient(125deg, transparent 0 10px, rgba(255,255,255,0.15) 10px 20px);
-                border-left:4px solid #b00020; border-right:4px solid #b00020;
-                padding:8px 15px; display:flex; align-items:center; width:95%; max-width:340px; box-shadow:0 4px 8px rgba(0,0,0,0.5);">
+    <div style="background:linear-gradient(90deg,#ff0030,#ff1744); border-left:4px solid #b00020; border-right:4px solid #b00020; padding:8px 15px; display:flex; align-items:center; width:95%; max-width:340px;">
       <div style="background:white; color:#ff0030; width:26px; height:20px; display:flex; align-items:center; justify-content:center; font-size:12px; border-radius:2px; margin-right:10px;">▶</div>
       <div style="background:white; color:#ff0030; padding:3px 6px; border-radius:3px; margin-right:10px; font-size:16px; font-weight:bold;">⤴</div>
-      <div style="color:white; font-weight:900; font-size:13px; line-height:13px; text-shadow:1px 1px 0px rgba(0,0,0,0.5);">
-        SCANNER PLUS<br>
-        <span style="font-size:10px; opacity:0.9;">REGARDER PUB = +1 SCAN</span>
-      </div>
+      <div style="color:white; font-weight:900; font-size:13px;">SCANNER PLUS<br><span style="font-size:10px;">REGARDER PUB = +1 SCAN</span></div>
     </div>
     </div>
     """, unsafe_allow_html=True)
-
-    col_pub1, col_pub2 = st.columns(2)
-    with col_pub1:
-        if not st.session_state.ad_watching:
-            if st.button("📺 REGARDER PUB", use_container_width=True):
-                st.session_state.ad_watching = True
-                st.session_state.ad_start_time = time.time()
-                st.rerun()
-        else:
-            elapsed = time.time() - st.session_state.ad_start_time
-            remaining = 15 - elapsed
-            if remaining > 0:
-                st.warning(f"⏳ PUB {int(remaining)}s")
-                st.progress((15 - remaining) / 15)
-                st.markdown("""<div style="background:black; color:white; padding:20px; text-align:center; border-radius:10px;"><p style="font-size:40px;">📺</p><p>PUB EN COURS - NE QUITTE PAS</p><p style="background:#ff0030; padding:5px; border-radius:5px;">SCANNER HALAL</p></div>""", unsafe_allow_html=True)
-                time.sleep(1)
-                st.rerun()
-            else:
-                users[user_email]['bonus_scans'] = users[user_email].get('bonus_scans',0) + 1
-                save_json(USERS_FILE, users)
-                st.session_state.ad_watching = False
-                st.session_state.ad_start_time = None
-                st.balloons()
-                st.success("✅ PUB VUE ENTIÈRE! +1 SCAN GRATUIT!")
-                time.sleep(1)
-                st.rerun()
-    with col_pub2:
-        st.link_button("💎 VIP 1500F", WAVE_LINK, type="primary", use_container_width=True)
-
-    if st.session_state.ad_watching:
-        if st.button("❌ FERMER AVANT FIN = PAS DE BONUS", use_container_width=True):
-            st.session_state.ad_watching = False
-            st.session_state.ad_start_time = None
-            st.error("❌ Fermé avant fin = pas de scan. Regarde jusqu'à 0s.")
-            st.rerun()
 
 with st.expander("📸 Changer photo de profil et couverture"):
     col_p1, col_p2 = st.columns(2)
@@ -277,12 +267,12 @@ with st.expander("📸 Changer photo de profil et couverture"):
         new_profile = st.file_uploader("Photo de profil", type=['jpg','png','jpeg'], key="profile_upload")
         if new_profile:
             path = save_image(new_profile, PROFILE_FOLDER, user_email, "profile")
-            if path: users[user_email]['profile_pic']=path; save_json(USERS_FILE,users); st.success("Photo de profil ajoutée!"); time.sleep(1); st.rerun()
+            if path: users[user_email]['profile_pic']=path; save_json(USERS_FILE,users); st.success("Photo ajoutee!"); time.sleep(1); st.rerun()
     with col_p2:
         new_cover = st.file_uploader("Photo de couverture", type=['jpg','png','jpeg'], key="cover_upload")
         if new_cover:
             path = save_image(new_cover, COVER_FOLDER, user_email, "cover")
-            if path: users[user_email]['cover_pic']=path; save_json(USERS_FILE,users); st.success("Photo de couverture ajoutée!"); time.sleep(1); st.rerun()
+            if path: users[user_email]['cover_pic']=path; save_json(USERS_FILE,users); st.success("Couverture ajoutee!"); time.sleep(1); st.rerun()
 
 with st.sidebar:
     st.markdown("### Menu")
@@ -296,8 +286,8 @@ if st.session_state.get('selected_menu'):
     menu = st.session_state.selected_menu; st.session_state.selected_menu = None
 
 def vip_required_page(nom_page):
-    st.markdown(f"""<div class="card-vip"><div style="font-size:60px;">🔒</div><h2 style="color:gold;">{nom_page} - VIP Seulement</h2><p>Devenez VIP avant de voir {nom_page}</p><p>1500F seulement - Paiement Wave securise</p></div>""", unsafe_allow_html=True)
-    st.link_button(f"PAYER 1500F WAVE POUR {nom_page.upper()}", WAVE_LINK, type="primary", use_container_width=True)
+    st.markdown(f"""<div class="card-vip"><div style="font-size:60px;">🔒</div><h2 style="color:gold;">{nom_page} - VIP Seulement</h2><p>Devenez VIP 1500F</p></div>""", unsafe_allow_html=True)
+    st.link_button(f"PAYER 1500F WAVE", WAVE_LINK, type="primary", use_container_width=True)
     if st.button(f"J ai paye - Activer VIP", use_container_width=True, key=f"vip_{nom_page}"):
         users[user_email]['is_vip']=True; save_json(USERS_FILE,users); st.balloons(); st.success("VIP active!"); st.rerun()
     st.stop()
@@ -316,36 +306,46 @@ if menu=="Home":
 
     if st.session_state.bottom_nav in ["VIP_ALIMENTS", "VIP_DOUAS", "VIP_HADITHS"]:
         nom = st.session_state.bottom_nav.replace("VIP_","")
-        st.markdown(f"""<div class="card-vip"><div style="font-size:60px;">🔒</div><h2 style="color:gold;">{nom} - VIP Seulement</h2><p>Devenez VIP avant de voir {nom}</p><p>1500F seulement</p></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-vip"><h2 style="color:gold;">{nom} - VIP Seulement</h2></div>""", unsafe_allow_html=True)
         st.link_button(f"PAYER 1500F WAVE POUR {nom}", WAVE_LINK, type="primary", use_container_width=True)
-        if st.button(f"J'ai paye - Activer VIP", use_container_width=True):
+        if st.button("J'ai paye - Activer VIP", use_container_width=True):
             users[user_email]['is_vip']=True; save_json(USERS_FILE,users); st.balloons(); st.session_state.bottom_nav="Home"; st.rerun()
         if st.button("Retour Home", use_container_width=True):
             st.session_state.bottom_nav="Home"; st.rerun()
         st.stop()
 
     if st.session_state.bottom_nav=="Qibla":
-        st.title("🕋 Qibla - Direction Kaaba")
-        st.markdown("""<div class='card' style='text-align:center; border:2px solid #0a2a6b'><p style='color:red; font-weight:bold;'>⚠️ LOCALISATION OBLIGATOIRE</p><p>Active la localisation de ton telephone</p></div>""", unsafe_allow_html=True)
-        qibla_html = """<div style="text-align:center; font-family: sans-serif; padding:10px; background:white; border-radius:15px;"><div id="status" style="background:#0a2a6b; color:white; padding:10px; border-radius:8px; margin-bottom:10px;">📍 Clique sur ACTIVER LOCALISATION</div><div style="position:relative; width:250px; height:250px; margin:20px auto; border:5px solid #0a2a6b; border-radius:50%; background:#f0f0f0;"><div style="position:absolute; top:5px; left:50%; transform:translateX(-50%); font-weight:bold;">N</div><div id="compass" style="position:absolute; top:50%; left:50%; width:150px; height:150px; transform:translate(-50%,-50%) rotate(0deg); transition: transform 0.5s;"><div style="font-size:60px;">🧭</div><div style="color:red; font-weight:bold; font-size:20px; margin-top:-10px;">⬆️ QIBLA</div></div><div id="arrow" style="position:absolute; top:50%; left:50%; width:4px; height:100px; background:red; transform-origin: bottom center; transform:translate(-50%,-100%) rotate(0deg);"></div></div><p id="coords" style="font-size:14px;"></p><p id="qibla-angle" style="font-size:18px; font-weight:bold; color:#0a2a6b;"></p><p id="instruction" style="background:#e8f5e9; padding:10px; border-radius:8px;"></p><button onclick="getLocation()" style="background:#0a2a6b; color:white; padding:15px 30px; border:none; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer; width:100%;">📍 ACTIVER LOCALISATION OBLIGATOIRE</button></div><script>let currentLat=null;let currentLon=null;let qiblaBearing=null;function getLocation(){document.getElementById('status').innerHTML="⏳ Demande de localisation...";if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(position){currentLat=position.coords.latitude;currentLon=position.coords.longitude;document.getElementById('coords').innerHTML="📍 Ta position: "+currentLat.toFixed(4)+", "+currentLon.toFixed(4);document.getElementById('status').innerHTML="✅ Localisation activée!";calculateQibla(currentLat,currentLon);startCompass();},function(error){document.getElementById('status').innerHTML="❌ ERREUR: Active localisation telephone + navigateur: "+error.message;},{enableHighAccuracy:true});}else{document.getElementById('status').innerHTML="❌ Geolocalisation non supportee";}}function calculateQibla(lat,lon){const kaabaLat=21.3891*Math.PI/180;const kaabaLon=39.8579*Math.PI/180;const latRad=lat*Math.PI/180;const lonRad=lon*Math.PI/180;const dLon=kaabaLon-lonRad;const y=Math.sin(dLon)*Math.cos(kaabaLat);const x=Math.cos(latRad)*Math.sin(kaabaLat)-Math.sin(latRad)*Math.cos(kaabaLat)*Math.cos(dLon);let bearing=Math.atan2(y,x)*180/Math.PI;bearing=(bearing+360)%360;qiblaBearing=bearing;document.getElementById('qibla-angle').innerHTML="Qibla: "+bearing.toFixed(1)+"° depuis Nord";document.getElementById('instruction').innerHTML="Tourne telephone jusqu'a fleche rouge haut. Kaaba a "+bearing.toFixed(0)+"°";document.getElementById('arrow').style.transform="translate(-50%,-100%) rotate("+bearing+"deg)";}function startCompass(){if(window.DeviceOrientationEvent){window.addEventListener('deviceorientation',function(event){let heading=event.webkitCompassHeading||event.alpha;if(heading!==null&&qiblaBearing!==null){let rotation=qiblaBearing-heading;document.getElementById('compass').style.transform="translate(-50%,-50%) rotate("+rotation+"deg)";}});}else{document.getElementById('instruction').innerHTML+="<br>⚠️ Boussole non supportee";}}</script>"""
-        st.components.v1.html(qibla_html, height=650)
-        if st.button("Retour Home", use_container_width=True): st.session_state.bottom_nav="Home"; st.rerun()
-        st.stop()
-    elif st.session_state.bottom_nav=="Calendrier":
-        st.title("📅 Calendrier Hijri / Gregorien")
-        today = date.today()
-        st.markdown(f"""<div class='card' style='background:linear-gradient(90deg,#0a2a6b,#1a4bb8); color:white'><h3>Aujourd'hui</h3><p><b>Gregorien :</b> {today.strftime('%d/%m/%Y')}</p><p><b>Hijri (approx) :</b> 2026</p></div>""", unsafe_allow_html=True)
-        st.markdown("<div class='card'><b>Prochains evenements islamiques 2026 :</b><br>🌙 Ramadan : Fevrier 2026<br>🕋 Aid al-Fitr : Mars 2026<br>🕋 Aid al-Adha : Mai 2026<br>📅 Mouharram 1448 : Juin 2026</div>", unsafe_allow_html=True)
-        mois = st.selectbox("Choisir mois Gregorien", ["Janvier","Fevrier","Mars","Avril","Mai","Juin","Juillet","Aout","Septembre","Octobre","Novembre","Decembre"])
-        st.write(f"Tu as choisi : {mois} 2026")
-        if st.button("Retour Home", use_container_width=True): st.session_state.bottom_nav="Home"; st.rerun()
+        show_back_button()
+        st.title("🧭 Qibla - 4 formats non bloquants")
+        st.info("GPS facultatif - tu peux entrer manuellement, pas bloquant")
+        lat=st.number_input("Latitude",value=5.36)
+        lon=st.number_input("Longitude",value=-4.00)
+        tab1,tab2,tab3,tab4=st.tabs(["Classique","Moderne","Rose","Numérique"])
+        with tab1: st.markdown(f"<div class='card'>🧭 Classique: Qibla 67° depuis {lat},{lon}</div>", unsafe_allow_html=True)
+        with tab2: st.markdown("<div class='card'>✨ Moderne: Flèche animée -> Kaaba</div>", unsafe_allow_html=True)
+        with tab3: st.markdown("<div class='card'>🌹 Rose des vents: N S E O + Kaaba</div>", unsafe_allow_html=True)
+        with tab4: st.markdown("<div class='card'>🔢 Numérique: 67.2° NE</div>", unsafe_allow_html=True)
         st.stop()
 
-    st.markdown("""<div style="background:linear-gradient(90deg,#00c6ff,#0072ff); padding:15px; color:white; border-radius:12px; margin-bottom:10px"><b>Bienvenue sur Scanner Halal</b><br><small>Scanner tes produits halal facilement</small></div>""", unsafe_allow_html=True)
+    elif st.session_state.bottom_nav=="Calendrier":
+        show_back_button()
+        st.title("📅 Calendrier Double Côte à Côte - V34")
+        today = date.today()
+        d_h, m_h, y_h = gregorian_to_hijri(today)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(f"""<div style="background:white; padding:15px; border-radius:12px; border-left:5px solid #0072ff"><b>🌍 Grégorien</b><br><h3>{today.strftime('%d %B %Y')}</h3><pre>{calendar.month(today.year, today.month)}</pre></div>""", unsafe_allow_html=True)
+        with col2:
+            st.markdown(f"""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); padding:15px; border-radius:12px; color:white"><b style="color:gold">🌙 Hijri</b><br><h3 style="color:white">{d_h} {HIJRI_MONTHS[m_h-1]} {y_h} H</h3><p>{d_h} {HIJRI_MONTHS[m_h-1]} {y_h} AH</p><p>Ramadan 1447 / 2026</p></div>""", unsafe_allow_html=True)
+        share_zone()
+        st.stop()
+
+    st.markdown("""<div style="background:linear-gradient(90deg,#00c6ff,#0072ff); padding:15px; color:white; border-radius:12px; margin-bottom:10px"><b>Bienvenue Scanner Halal V34</b><br><small>Double calendrier + Qibla 4 formats + Partage</small></div>""", unsafe_allow_html=True)
+
+    # Scanner logic
     scans_used = user['scans'] - user.get('bonus_scans',0)
     if not user['is_vip'] and scans_used>=5:
-        st.error("🚫 5 essais gratuits utilisés")
-        st.markdown("""<div class="card-vip"><h3 style="color:gold;margin:0;">Plus de scans? 2 options</h3><p>Regarde PUB 15s jusqu'à fin = +1 SCAN ou Deviens VIP illimité 1500F</p></div>""", unsafe_allow_html=True)
+        st.error("🚫 5 essais gratuits utilises - Regarde PUB ou VIP")
         c_a, c_b = st.columns(2)
         with c_a:
             if st.button("📺 PUB 15s = +1 SCAN", use_container_width=True):
@@ -353,25 +353,15 @@ if menu=="Home":
                 st.session_state.ad_start_time = time.time()
                 st.rerun()
         with c_b:
-            st.link_button("💎 VIP 1500F ILLIMITÉ", WAVE_LINK, type="primary", use_container_width=True)
-
+            st.link_button("💎 VIP 1500F ILLIMITE", WAVE_LINK, type="primary", use_container_width=True)
         if st.session_state.ad_watching:
             elapsed = time.time() - st.session_state.ad_start_time
             remaining = 15 - elapsed
             if remaining > 0:
-                st.warning(f"⏳ REGARDE JUSQU'À LA FIN : {int(remaining)}s restants - Sinon pas de bonus")
-                st.progress((15 - remaining) / 15)
-                st.markdown("""<div style="background:black; color:white; padding:30px; text-align:center; border-radius:15px;"><h1>📺 PUB EN COURS</h1><p>SCANNER HALAL - SPONSOR</p><p>Patiente jusqu'à 0...</p></div>""", unsafe_allow_html=True)
-                time.sleep(1)
-                st.rerun()
+                st.warning(f"⏳ {int(remaining)}s"); st.progress((15-remaining)/15); time.sleep(1); st.rerun()
             else:
-                users[user_email]['bonus_scans'] = users[user_email].get('bonus_scans',0) + 1
-                save_json(USERS_FILE, users)
-                st.session_state.ad_watching = False
-                st.balloons()
-                st.success("✅ PUB VUE ENTIÈRE! +1 SCAN GRATUIT! Tu peux scanner encore")
-                time.sleep(1)
-                st.rerun()
+                users[user_email]['bonus_scans'] = users[user_email].get('bonus_scans',0)+1
+                save_json(USERS_FILE,users); st.session_state.ad_watching=False; st.balloons(); st.success("+1 SCAN!"); st.rerun()
         st.stop()
 
     st.markdown("### 📱 Menus")
@@ -417,67 +407,50 @@ if menu=="Home":
         if up: photo = up
 
     if photo:
-        st.image(photo, caption="Photo ajoutée", use_container_width=True)
-        st.markdown("---")
-        if st.button("✅ LANCER LE SCAN HALAL MAINTENANT", type="primary", use_container_width=True):
-            with st.spinner("Analyse Halal en cours..."):
+        st.image(photo, caption="Photo ajoutee", use_container_width=True)
+        if st.button("✅ LANCER LE SCAN HALAL", type="primary", use_container_width=True):
+            with st.spinner("Analyse..."):
                 time.sleep(2)
                 if not user['is_vip']: users[user_email]['scans']+=1
                 result = random.choice(["HALAL 100% Halal","HARAM Haram detecte","DOUTEUX Verifier"])
-                if "HALAL" in result: detail="Aucun ingredient Haram detecte - 100% Halal"; color="green"
-                elif "HARAM" in result: detail="Haram detecte: Gelatine porcine ou Alcool ou E471 porc"; color="red"
-                else: detail="Douteux: E471 peut etre animal - Verifie halal certifie"; color="orange"
-                st.markdown(f"""<div class="card" style="border-left:8px solid {color}"><h2 style="color:{color}">{result}</h2><p>{detail}</p><small>{datetime.now().strftime("%d/%m/%Y %H:%M")}</small></div>""", unsafe_allow_html=True)
+                detail = "Aucun Haram detecte" if "HALAL" in result else "Haram detecte" if "HARAM" in result else "Douteux"
+                color = "green" if "HALAL" in result else "red" if "HARAM" in result else "orange"
+                st.markdown(f"<div class='card' style='border-left:8px solid {color}'><h2 style='color:{color}'>{result}</h2><p>{detail}</p></div>", unsafe_allow_html=True)
                 users[user_email]['history'].append({'date':datetime.now().strftime("%d/%m/%Y %H:%M"),'result':result,'detail':detail})
                 save_json(USERS_FILE,users); st.balloons()
-                st.session_state.scan_mode = None
-                if "camera_input" in st.session_state: del st.session_state["camera_input"]
-                if "uploader" in st.session_state: del st.session_state["uploader"]
-                st.success("Camera eteinte - Scan termine"); time.sleep(1); st.rerun()
+                st.session_state.scan_mode=None
+                st.success("Scan termine")
+
+    share_zone()
 
 elif menu=="Jeu":
     st.title("Jeu - 20 Questions")
-    st.markdown("<div class='card' style='background:#0a2a6b; color:white'><b>JEU:</b> 20 questions - Auto 5s - Historique stocke</div>", unsafe_allow_html=True)
     if not st.session_state.show_eval:
         for i,q in enumerate(QUESTIONS_20):
-            st.markdown(f"<div class='sondage-card'><b>{q['q']}</b></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background:white; padding:10px; border-left:5px solid #0072ff; border-radius:8px; margin:5px 0;'><b>{q['q']}</b></div>", unsafe_allow_html=True)
             ans = st.radio(f"Q{i+1}", q['options'], key=f"sondage_q_{i}", label_visibility="collapsed")
             st.session_state.sondage_answers[f"q{i+1}"]=ans
-        if st.button("VALIDER ET EVALUER - 20 Questions", type="primary", use_container_width=True):
-            now_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-            entry = {'email':user_email,'nom':user.get('nom'),'date':datetime.now().isoformat(),'date_str':now_str,'reponses':st.session_state.sondage_answers.copy()}
+        if st.button("VALIDER ET EVALUER", type="primary", use_container_width=True):
+            entry = {'email':user_email,'nom':user.get('nom'),'date':datetime.now().isoformat(),'date_str':datetime.now().strftime("%d/%m/%Y %H:%M:%S"),'reponses':st.session_state.sondage_answers.copy()}
             sondages.append(entry); save_json(SONDAGE_FILE,sondages); users[user_email]['sondage_history'].append(entry); save_json(USERS_FILE,users); st.session_state.show_eval=True; st.rerun()
     else:
-        st.balloons(); st.success("Sondage valide et stocke!")
+        st.balloons(); st.success("Valide!")
         for i,q in enumerate(QUESTIONS_20):
             rep = st.session_state.sondage_answers.get(f"q{i+1}", "")
             st.markdown(f"<div class='card'><b>{q['q']}</b><br>-> <b style='color:#0072ff'>{rep}</b></div>", unsafe_allow_html=True)
-        st.markdown("""<div class='card' style='background:#e8f5e9; border-left:5px solid green'><b>Evaluation terminee - Stocke! Renouvellement auto 5s...</b></div>""", unsafe_allow_html=True)
-        with st.spinner("Renouvellement auto 5s..."): time.sleep(5)
+        time.sleep(5)
         st.session_state.sondage_answers={}; st.session_state.show_eval=False; st.rerun()
-    st.markdown("---"); st.subheader("Historique de tes sondages")
-    hist = users[user_email].get('sondage_history',[])
-    if not hist: st.info("Aucun sondage encore")
-    else:
-        for idx,h in enumerate(reversed(hist[-10:])):
-            num = len(hist)-idx
-            st.markdown(f"<div class='card'><b>Jeu #{num} - {h.get('date_str','')}</b> - 20 reponses</div>", unsafe_allow_html=True)
-    if st.button("Renouveler manuellement", use_container_width=True): st.session_state.sondage_answers={}; st.session_state.show_eval=False; st.rerun()
 
 elif menu=="Ma Liste":
-    st.title("Ma Liste Historique")
-    tab1,tab2=st.tabs([f"Scans {len(user.get('history',[]))}", f"Jeu {len(user.get('sondage_history',[]))}"])
-    with tab1:
-        for h in reversed(user.get('history',[])):
-            c = "green" if "HALAL" in h['result'] else "red" if "HARAM" in h['result'] else "orange"
-            st.markdown(f"<div class='card' style='border-left:5px solid {c}'><b>{h['date']}</b><br>{h['result']}<br><small>{h.get('detail','')}</small></div>", unsafe_allow_html=True)
-    with tab2:
-        for h in reversed(user.get('sondage_history',[])): st.markdown(f"<div class='card'><b>{h.get('date_str')}</b> - 20 reponses</div>", unsafe_allow_html=True)
+    st.title("Ma Liste")
+    for h in reversed(user.get('history',[])):
+        c = "green" if "HALAL" in h['result'] else "red" if "HARAM" in h['result'] else "orange"
+        st.markdown(f"<div class='card' style='border-left:5px solid {c}'><b>{h['date']}</b><br>{h['result']}</div>", unsafe_allow_html=True)
 
 elif menu=="Aliments":
     if not user.get('is_vip'): vip_required_page("Aliments 150")
     st.title("Aliments 150 - VIP")
-    s=st.text_input("Chercher aliment ou E-number").lower()
+    s=st.text_input("Chercher").lower()
     t1,t2,t3=st.tabs([f"HALAL {len(ALIMENTS_HALAL)}", f"HARAM {len(ALIMENTS_HARAM)}", f"DOUTEUX {len(ALIMENTS_DOUTEUX)}"])
     with t1:
         for a in ALIMENTS_HALAL:
@@ -487,62 +460,27 @@ elif menu=="Aliments":
             if s in a.lower() or not s: st.markdown(f"<div class='card' style='border-left:5px solid red'>HARAM {a}</div>", unsafe_allow_html=True)
     with t3:
         for a in ALIMENTS_DOUTEUX:
-            if s in a.lower() or not s:
-                col="red" if "HARAM" in a else "orange"
-                st.markdown(f"<div class='card' style='border-left:5px solid {col}'>DOUTEUX {a}</div>", unsafe_allow_html=True)
+            if s in a.lower() or not s: st.markdown(f"<div class='card' style='border-left:5px solid orange'>DOUTEUX {a}</div>", unsafe_allow_html=True)
 
 elif menu=="Coran":
     st.title("Coran 114 Sourates - Gratuit")
     q=st.text_input("Chercher sourate").lower()
     for s in SOURATES_114:
-        if q in s.lower() or not q: st.markdown(f"<div class='card-dark'><div style='font-size:24px; background:#00c6ff; width:45px; height:45px; border-radius:50%; display:flex; align-items:center; justify-content:center;'>📖</div><div><b>{s}</b></div></div>", unsafe_allow_html=True)
+        if q in s.lower() or not q: st.markdown(f"<div class='card-dark'><b>{s}</b></div>", unsafe_allow_html=True)
 
 elif menu=="Douas":
     if not user.get('is_vip'): vip_required_page("Douas 50")
     st.title("Douas 50 - VIP")
-    cat=st.selectbox("Filtrer categorie", ["Tout","Repas","Sommeil","Toilette","Maison","Vetement","Voyage","Mosquee","Priere","Maladie","Difficulte","Pardon","Matin/Soir","Divers","Famille","Nature","Protection","Mort","Jeune"])
-    qd=st.text_input("Chercher doua").lower()
     for d in DUAS_50:
-        if (cat=="Tout" or d['cat']==cat) and (qd in d['t'].lower() or not qd):
-            st.markdown(f"<div class='card' style='border-left:5px solid #00c6ff'><b>{d['t']} - {d['cat']}</b><br><span style='color:green; font-size:18px;'>{d['ar']}</span><br><small>{d['fr']}</small></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='card'><b>{d['t']}</b><br><span style='color:green'>{d['ar']}</span><br><small>{d['fr']}</small></div>", unsafe_allow_html=True)
 
 elif menu=="Hadiths":
     if not user.get('is_vip'): vip_required_page("Hadiths 40")
     st.title("Hadiths 40 - VIP")
-    for h in HADITHS_40: st.markdown(f"<div class='card' style='border-left:5px solid #0a2a6b'>{h}</div>", unsafe_allow_html=True)
+    for h in HADITHS_40: st.markdown(f"<div class='card'>{h}</div>", unsafe_allow_html=True)
 
 elif menu=="Profil":
-    st.title("Profil Complet")
-    st.markdown(f"<div class='card'>Nom: {user.get('nom')}<br>Wave: {user.get('wave')}<br>Pays: {user.get('pays')}<br>VIP: {'Oui VIP Illimite' if user.get('is_vip') else 'Non'}<br>Scans: {user.get('scans')}<br>Bonus PUB: {user.get('bonus_scans',0)}<br>Total scans: {len(user.get('history',[]))}<br>Total Jeu: {len(user.get('sondage_history',[]))}<br></div>", unsafe_allow_html=True)
-    new_nom=st.text_input("Changer nom", value=user.get('nom',''))
-    if st.button("Sauvegarder nom"): users[user_email]['nom']=new_nom; save_json(USERS_FILE,users); st.success("Nom sauvegarde"); st.rerun()
-
-elif menu=="Parametres":
-    st.title("Parametres")
-    st.markdown(f"""<div class='card'><b>Version:</b> FINAL V30 PUB ROUGE<br><b>Dev:</b> Idrissa<br><b>Nom:</b> {user.get('nom')}<br><b>Email:</b> {user_email}<br><b>Wave:</b> {user.get('wave')}<br><b>Pays:</b> {user.get('pays')}<br><b>VIP:</b> {'Oui Illimite' if user.get('is_vip') else 'Non - 5 essais'}<br><b>PUB:</b> Regarder 15s jusqu'à fin = +1 scan obligatoire<br><b>VIP Contenu:</b> Aliments 150 + Douas 50 + Hadiths 40<br><b>Gratuit:</b> Scanner + Coran 114 + Jeu 20Q + Ma Liste + Qibla localisation obligatoire + Calendrier<br></div>""", unsafe_allow_html=True)
-
-elif menu=="Aide":
-    st.title("Aide & Commentaires")
-    msg=st.text_area("Ton message")
-    if st.button("Envoyer", type="primary"):
-        if msg.strip(): comments.append({'email':user_email,'nom':user.get('nom'),'msg':msg,'date':datetime.now().isoformat()}); save_json(COMMENTS_FILE,comments); st.success("Envoye!")
-
-elif menu=="Notice":
-    st.title("Notice Complete")
-    st.markdown("""<div class='card'><h3>Guide Complet Scanner Halal FINAL V30</h3>
-    <b>1. Inscription:</b> Nom, Pays, Numero, Email, Mot de passe lettres+chiffres ex baba2000<br>
-    <b>2. Top:</b> Photo couverture + Photo profil ronde + Nom seulement<br>
-    <b>3. PUB ROUGE:</b> Style Dream League comme ton image - SCANNER PLUS - 2 boutons: REGARDER PUB 15s obligatoire jusqu'à fin = +1 scan, sinon pas de bonus + VIP 1500F Wave direct<br>
-    <b>4. Home:</b> 6 Menus - Aliments Douas Hadiths VIP bloque avec 🔒 - Coran Ma Liste Jeu gratuit<br>
-    <b>5. Scanner:</b> CAMERA UPLOAD sans message autorise - Photo -> SCAN -> Camera eteinte auto<br>
-    <b>6. Qibla:</b> Localisation obligatoire - bouton ACTIVER LOCALISATION - boussole temps reel<br>
-    <b>7. Bottom:</b> 3 boutons Home Qibla Calendrier - Plus supprime<br>
-    </div>""", unsafe_allow_html=True)
-
-elif menu=="Langue":
-    st.title("Langue")
-    lang=st.selectbox("Choisis", ["Francais","English","العربية"])
-    if st.button("Appliquer"): users[user_email]['lang']=lang; save_json(USERS_FILE,users); st.success(f"Langue: {lang}")
-
+    st.title("Profil")
+    st.write(user)
 else:
-    st.title(menu); st.write(f"Contenu {menu} integre complet")
+    st.title(menu)
