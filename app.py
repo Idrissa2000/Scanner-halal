@@ -68,64 +68,13 @@ def show_back_button():
 def share_zone():
     st.link_button("📤 Partager l'app", f"https://wa.me/?text=Decouvre Scanner Halal {APP_LINK}", use_container_width=True)
 
-ALIMENTS_HALAL = [
-    "Poulet halal egorge selon islam","Boeuf halal egorge","Mouton halal egorge","Chevre halal egorge","Chameau halal","Dinde halal","Canard halal","Lapin halal",
-    "Poisson tout type hareng thon sardine maquereau carpe tilapia capitaine","Crevettes halal","Crabe halal","Homard halal","Calamar halal",
-    "Riz blanc","Riz complet","Riz parfume","Mil","Mais","Ble","Fonio","Sorgho","Avoine","Orge",
-    "Arachide","Noix cajou","Amande","Noix","Noisette","Pistache","Sesame","Noix coco",
-    "Mangue","Banane","Orange","Ananas","Pasteque","Papaye","Goyave","Citron","Mandarin","Pomme","Poire","Avocat","Fruit passion","Corossol",
-    "Tomate","Oignon","Piment","Gombo","Aubergine","Carotte","Pomme terre","Manioc","Igname","Patate douce","Chou","Laitue","Concombre","Courgette","Haricot vert","Epinard",
-    "Haricot blanc","Haricot rouge","Lentille","Pois chiche","Petit pois","Soja",
-    "Lait vache halal","Lait chevre halal","Yaourt nature sans gelatine porcine","Fromage halal sans presure porcine","Miel pur 100%","Dattes Ajwa Medine","Dattes Sukkary","Dattes Deglet Nour",
-    "Huile palme","Huile arachide","Huile olive","Huile tournesol","Huile coco","Beurre halal","Sucre canne","Sucre roux","Sel marin","Poivre noir","Curcuma","Gingembre","Ail","Cumin","Coriandre",
-    "Pain sans E471 porc verifie","Biscuit halal certifie","Jus naturel 100% fruit sans alcool","The vert","The noir","Cafe","Eau minerale","Eau coco"
-]
-ALIMENTS_HARAM = [
-    "Porc toute partie viande graisse peau HARAM","Jambon porc HARAM","Saucisson porc HARAM","Saucisse porc HARAM","Lard porc HARAM","Bacon porc HARAM","Chorizo porc HARAM",
-    "Vin rouge HARAM alcool","Vin blanc HARAM","Biere HARAM","Whisky HARAM","Rhum HARAM","Vodka HARAM","Champagne HARAM","Alcool ethylique HARAM",
-    "Sang animal HARAM","Cadavre animal non egorge selon islam HARAM","Animal mort sans egorgement halal HARAM","Viande non halal non egorgee HARAM",
-    "Gelatine porcine E441 HARAM","E120 Cochenille insecte rouge HARAM","E422 Glycerol origine porc HARAM","E471 Mono-diglycerides origine porc HARAM","E481 Stearoyl lactylate porc HARAM","E492 Tristearate sorbitan porc HARAM"
-]
-ALIMENTS_DOUTEUX = [
-    "E102 Tartrazine Douteux peut etre halal mais allergie","E104 Jaune quinoleine Douteux","E110 Jaune orange S Douteux hyperactivite",
-    "E120 Cochenille HARAM insecte Rouge","E122 Azorubine Douteux Rouge","E124 Ponceau 4R Douteux Rouge","E132 Indigotine Douteux Bleu","E133 Bleu brillant FCF Douteux",
-    "E140 Chlorophylle Halal si origine vegetale 100%","E141 Complexe cuivrique chlorophylles Halal si vegetal","E150a Caramel ordinaire Halal","E150b Caramel sulfite Halal",
-    "E160a Beta-carotene Halal vegetal","E160b Rocou bixine Halal","E160c Extrait paprika Halal","E162 Rouge betterave Halal","E163 Anthocyanes Halal",
-    "E170 Carbonate calcium Halal","E171 Dioxyde titane Halal mais debat sante","E200 Acide sorbique Halal","E211 Benzoate sodium Halal","E250 Nitrite sodium Halal mais deconseille",
-    "E300 Acide ascorbique Vitamine C Halal","E322 Lecithine Halal si soja 100% Haram si porc","E330 Acide citrique Halal","E400 Acide alginique Halal","E406 Agar-agar HALAL 100% algue","E407 Carraghenane HALAL","E410 Gomme caroube HALAL","E412 Gomme guar HALAL","E414 Gomme arabique HALAL","E415 Gomme xanthane HALAL",
-    "E420 Sorbitol Halal","E422 Glycerol HARAM si porc HALAL si vegetal","E440 Pectine HALAL 100% vegetal","E441 Gelatine HARAM si porc HALAL si boeuf halal","E471 Mono-diglycerides DOUTEUX PEUT ETRE PORC HARAM Verifier halal certifie","E472 Esters Douteux","E481 Stearoyl lactylate Douteux porc possible","E491 Sorbitan Douteux"
-]
-SOURATES_114 = [
-    "1 Al-Fatiha - Ouverture - 7 versets - Mecquoise","2 Al-Baqara - Vache - 286 - Medinoise","3 Al-Imran - Famille Imran - 200 - Medinoise","4 An-Nisa - Femmes - 176 - Medinoise","5 Al-Maida - Table Servie - 120 - Medinoise","6 Al-Anam - Bestiaux - 165 - Mecquoise","7 Al-Araf - Murettes - 206 - Mecquoise","8 Al-Anfal - Butin - 75 - Medinoise","9 At-Tawba - Repentir - 129 - Medinoise","10 Younus - Jonas - 109 - Mecquoise","11 Houd - Houd - 123 - Mecquoise","12 Youssouf - Joseph - 111 - Mecquoise","13 Ar-Raad - Tonnerre - 43 - Medinoise","14 Ibrahim - Abraham - 52 - Mecquoise","15 Al-Hijr - Vallee Pierres - 99 - Mecquoise","16 An-Nahl - Abeilles - 128 - Mecquoise","17 Al-Isra - Voyage Nocturne - 111 - Mecquoise","18 Al-Kahf - Caverne - 110 - Mecquoise","19 Maryam - Marie - 98 - Mecquoise","20 Ta-Ha - Ta-Ha - 135 - Mecquoise","21 Al-Anbiya - Prophetes - 112 - Mecquoise","22 Al-Hajj - Pelerinage - 78 - Medinoise","23 Al-Muminune - Croyants - 118 - Mecquoise","24 An-Nour - Lumiere - 64 - Medinoise","25 Al-Furqane - Discernement - 77 - Mecquoise","26 Ach-Chuara - Poetes - 227 - Mecquoise","27 An-Naml - Fourmis - 93 - Mecquoise","28 Al-Qasas - Recit - 88 - Mecquoise","29 Al-Ankabut - Araignee - 69 - Mecquoise","30 Ar-Rum - Romains - 60 - Mecquoise","31 Luqman - Luqman - 34 - Mecquoise","32 As-Sajda - Prosternation - 30 - Mecquoise","33 Al-Ahzab - Coalises - 73 - Medinoise","34 Saba - Saba - 54 - Mecquoise","35 Fatir - Createur - 45 - Mecquoise","36 Ya-Sin - Ya-Sin - 83 - Mecquoise","37 As-Saffat - Rangees - 182 - Mecquoise","38 Sad - Sad - 88 - Mecquoise","39 Az-Zumar - Groupes - 75 - Mecquoise","40 Ghafir - Pardonneur - 85 - Mecquoise","41 Fussilat - Versets Details - 54 - Mecquoise","42 Ach-Chura - Concertation - 53 - Mecquoise","43 Az-Zukhruf - Ornement - 89 - Mecquoise","44 Ad-Dukhan - Fumee - 59 - Mecquoise","45 Al-Jathya - Agenouillee - 37 - Mecquoise","46 Al-Ahqaf - Dunes - 35 - Mecquoise","47 Muhammad - Muhammad - 38 - Medinoise","48 Al-Fath - Victoire - 29 - Medinoise","49 Al-Hujurat - Appartements - 18 - Medinoise","50 Qaf - Qaf - 45 - Mecquoise","51 Adh-Dhariyat - Eparpillent - 60 - Mecquoise","52 At-Tur - Mont Sinai - 49 - Mecquoise","53 An-Najm - Etoile - 62 - Mecquoise","54 Al-Qamar - Lune - 55 - Mecquoise","55 Ar-Rahman - Misericordieux - 78 - Medinoise","56 Al-Waqia - Evenement - 96 - Mecquoise","57 Al-Hadid - Fer - 29 - Medinoise","58 Al-Mujadala - Discussion - 22 - Medinoise","59 Al-Hachr - Exode - 24 - Medinoise","60 Al-Mumtahana - Eprouvee - 13 - Medinoise","61 As-Saff - Rang - 14 - Medinoise","62 Al-Jumua - Vendredi - 11 - Medinoise","63 Al-Munafiqun - Hypocrites - 11 - Medinoise","64 At-Taghabun - Grande Perte - 18 - Medinoise","65 At-Talaq - Divorce - 12 - Medinoise","66 At-Tahrim - Interdiction - 12 - Medinoise","67 Al-Mulk - Royaute - 30 - Mecquoise","68 Al-Qalam - Plume - 52 - Mecquoise","69 Al-Haqqa - Celle qui montre verite - 52 - Mecquoise","70 Al-Maarij - Voies Ascension - 44 - Mecquoise","71 Nouh - Noe - 28 - Mecquoise","72 Al-Jinn - Djinns - 28 - Mecquoise","73 Al-Muzzammil - Enveloppe - 20 - Mecquoise","74 Al-Muddathir - Revete manteau - 56 - Mecquoise","75 Al-Qiyama - Resurrection - 40 - Mecquoise","76 Al-Insan - Homme - 31 - Medinoise","77 Al-Mursalat - Envoyes - 50 - Mecquoise","78 An-Naba - Nouvelle - 40 - Mecquoise","79 An-Naziat - Anges arrachent ames - 46 - Mecquoise","80 Abasa - Renfrogne - 42 - Mecquoise","81 At-Takwir - Obscurcissement - 29 - Mecquoise","82 Al-Infitar - Rupture - 19 - Mecquoise","83 Al-Mutaffifin - Fraudeurs - 36 - Mecquoise","84 Al-Inchiqaq - Dechirure - 25 - Mecquoise","85 Al-Buruj - Constellations - 22 - Mecquoise","86 At-Tariq - Astre Nocturne - 17 - Mecquoise","87 Al-Ala - Tres-Haut - 19 - Mecquoise","88 Al-Ghachiya - Enveloppante - 26 - Mecquoise","89 Al-Fajr - Aube - 30 - Mecquoise","90 Al-Balad - Cite - 20 - Mecquoise","91 Ach-Chams - Soleil - 15 - Mecquoise","92 Al-Layl - Nuit - 21 - Mecquoise","93 Ad-Duha - Jour Montant - 11 - Mecquoise","94 Ach-Charh - Ouverture - 8 - Mecquoise","95 At-Tin - Figuier - 8 - Mecquoise","96 Al-Alaq - Adherence - 19 - Mecquoise","97 Al-Qadr - Destinee - 5 - Mecquoise","98 Al-Bayyina - Preuve - 8 - Medinoise","99 Az-Zalzala - Secousse - 8 - Medinoise","100 Al-Adiyat - Coursiers - 11 - Mecquoise","101 Al-Qaria - Fracas - 11 - Mecquoise","102 At-Takatur - Course richesses - 8 - Mecquoise","103 Al-Asr - Temps - 3 - Mecquoise","104 Al-Humaza - Calomniateurs - 9 - Mecquoise","105 Al-Fil - Elephant - 5 - Mecquoise","106 Quraich - Coraich - 4 - Mecquoise","107 Al-Maun - Ustensile - 7 - Mecquoise","108 Al-Kawthar - Abondance - 3 - Mecquoise","109 Al-Kafirun - Infideles - 6 - Mecquoise","110 An-Nasr - Secours - 3 - Medinoise","111 Al-Masad - Fibres - 5 - Mecquoise","112 Al-Ikhlas - Monotheisme Pur - 4 - Mecquoise","113 Al-Falaq - Aube Naissante - 5 - Mecquoise","114 An-Nas - Hommes - 6 - Mecquoise"
-]
-DUAS_50 = [
-    {"t":"1 Avant manger","ar":"بسم الله","fr":"Au nom d Allah","cat":"Repas"},{"t":"2 Apres manger","ar":"الحمد لله الذي اطعمنا","fr":"Louange a Allah","cat":"Repas"},{"t":"3 Avant dormir","ar":"باسمك اللهم اموت واحيا","fr":"En Ton nom","cat":"Sommeil"},{"t":"4 Au reveil","ar":"الحمد لله الذي احيانا","fr":"Louange a Allah","cat":"Sommeil"},{"t":"5 Entrer toilette","ar":"اللهم اني اعوذ بك","fr":"Refuge contre demons","cat":"Toilette"},{"t":"6 Sortir toilette","ar":"غفرانك","fr":"Pardon","cat":"Toilette"},{"t":"7 Entrer maison","ar":"بسم الله ولجنا","fr":"Au nom d Allah","cat":"Maison"},{"t":"8 Sortir maison","ar":"بسم الله توكلت","fr":"Je m en remets","cat":"Maison"},{"t":"9 S habiller","ar":"الحمد لله الذي كساني","fr":"Louange","cat":"Vetement"},{"t":"10 Nouveau vetement","ar":"اللهم لك الحمد","fr":"A Toi louange","cat":"Vetement"},{"t":"11 Se deshabiller","ar":"بسم الله","fr":"Au nom d Allah","cat":"Vetement"},{"t":"12 Voyage depart","ar":"سبحان الذي سخر","fr":"Gloire a Celui","cat":"Voyage"},{"t":"13 Voyage retour","ar":"ايبون تائبون","fr":"Nous revenons","cat":"Voyage"},{"t":"14 Entrer mosquee","ar":"اللهم افتح لي","fr":"Ouvre portes","cat":"Mosquee"},{"t":"15 Sortir mosquee","ar":"اللهم اني اسالك","fr":"Je demande grace","cat":"Mosquee"},{"t":"16 Apres adhan","ar":"اللهم رب هذه الدعوة","fr":"Seigneur appel","cat":"Priere"},{"t":"17 Debut woudou","ar":"بسم الله","fr":"Au nom d Allah","cat":"Priere"},{"t":"18 Fin woudou","ar":"اشهد ان لا اله الا الله","fr":"J atteste","cat":"Priere"},{"t":"19 Malade","ar":"اذهب الباس","fr":"Fais partir mal","cat":"Maladie"},{"t":"20 Visite malade","ar":"لا باس طهور","fr":"Pas de mal","cat":"Maladie"},{"t":"21 Tristesse","ar":"لا اله الا الله العظيم","fr":"Il n y a de dieu qu Allah","cat":"Difficulte"},{"t":"22 Anxiete","ar":"اللهم اني اعوذ بك","fr":"Refuge contre souci","cat":"Difficulte"},{"t":"23 Difficulte","ar":"اللهم لا سهل","fr":"Rien facile","cat":"Difficulte"},{"t":"24 Dette","ar":"اللهم اكفني","fr":"Contente-moi","cat":"Difficulte"},{"t":"25 Pardon","ar":"استغفر الله","fr":"Pardon","cat":"Pardon"},{"t":"26 Matin","ar":"اصبحنا واصبح الملك لله","fr":"Matin et royaute","cat":"Matin/Soir"},{"t":"27 Soir","ar":"امسينا وامسى الملك","fr":"Soir et royaute","cat":"Matin/Soir"},{"t":"28 Cauchemar","ar":"اعوذ بكلمات الله","fr":"Refuge","cat":"Sommeil"},{"t":"29 Colere","ar":"اعوذ بالله","fr":"Refuge satan","cat":"Difficulte"},{"t":"30 Eternuement","ar":"الحمد لله","fr":"Louange","cat":"Divers"},{"t":"31 Reponse eternuement","ar":"يرحمك الله","fr":"Misericorde","cat":"Divers"},{"t":"32 Mariage","ar":"بارك الله لكما","fr":"Benisse","cat":"Famille"},{"t":"33 Nouveau ne","ar":"بارك الله لك","fr":"Benisse","cat":"Famille"},{"t":"34 Pluie","ar":"اللهم صيبا نافعا","fr":"Pluie benefique","cat":"Nature"},{"t":"35 Vent fort","ar":"اللهم اني اسالك خيرها","fr":"Bien","cat":"Nature"},{"t":"36 Miroir","ar":"اللهم كما حسنت","fr":"Embelli","cat":"Divers"},{"t":"37 Marche","ar":"لا اله الا الله وحده","fr":"Dieu seul","cat":"Divers"},{"t":"38 Protection matin","ar":"حسبي الله","fr":"Allah suffit","cat":"Protection"},{"t":"39 Protection soir","ar":"بسم الله الذي لا يضر","fr":"Rien ne nuit","cat":"Protection"},{"t":"40 Istikhara","ar":"اللهم اني استخيرك","fr":"Je consulte","cat":"Priere"},{"t":"41 Apres priere","ar":"استغفر الله","fr":"Pardon","cat":"Priere"},{"t":"42 Fin assemblee","ar":"سبحانك اللهم","fr":"Gloire","cat":"Divers"},{"t":"43 Enterrement","ar":"اللهم اغفر له","fr":"Pardonne","cat":"Mort"},{"t":"44 Condoleances","ar":"انا لله","fr":"A Allah","cat":"Mort"},{"t":"45 Iftar jeune","ar":"ذهب الظما","fr":"Soif partie","cat":"Jeune"},{"t":"46 Laylatoul Qadr","ar":"اللهم انك عفو","fr":"Pardonneur","cat":"Jeune"},{"t":"47 Entrer cimetiere","ar":"السلام عليكم","fr":"Paix","cat":"Mort"},{"t":"48 Douleur corps","ar":"بسم الله 3 مرات","fr":"Au nom d Allah","cat":"Maladie"},{"t":"49 Voir lune","ar":"الله اكبر","fr":"Allah Grand","cat":"Nature"},{"t":"50 Enfant peureux","ar":"اعيذك بكلمات الله","fr":"Protege","cat":"Famille"},
-]
-HADITHS_40 = [
-    "1. Les actions ne valent que par intentions - Bukhari 1","2. Halal clair Haram clair entre deux douteux - Bukhari 52","3. Aime pour ton frere ce que tu aimes pour toi - Bukhari 13","4. Proprete moitie foi - Muslim 223","5. Sourire a ton frere est aumone - Tirmidhi 1956","6. Meilleur apprend Coran et enseigne - Bukhari 5027","7. Allah est doux et aime douceur - Bukhari 6927","8. Facilitez ne rendez pas difficile - Bukhari 69","9. Pas de misericorde sans misericorde - Bukhari 7376","10. Religion est bon conseil - Muslim 55","11. Croyant fort meilleur que faible - Muslim 2664","12. Crains Allah ou que tu sois - Tirmidhi 1987","13. Musulman a l abri de sa langue et main - Bukhari 10","14. Ne te mets pas en colere - Bukhari 6116","15. Dis du bien ou tais-toi - Bukhari 6018","16. Priez comme vous m avez vu prier - Bukhari 631","17. Jeune est bouclier - Bukhari 1894","18. Qui jeune Ramadan pardonne - Bukhari 38","19. Construit mosquee maison au Paradis - Bukhari 450","20. Meilleur avec ses femmes - Tirmidhi 1162","21. Honore voisin - Bukhari 6019","22. Paradis sous pieds meres - Nasai 3104","23. Allah pur n accepte que pur - Muslim 1015","24. Delaisse doute pour certitude - Tirmidhi 2518","25. Laisse ce qui ne te concerne pas - Tirmidhi 2317","26. Modestie fait partie foi - Bukhari 9","27. Pas Paradis avec orgueil - Muslim 91","28. Soulage croyant Allah te soulagera - Muslim 2699","29. Meilleur dhikr La ilaha illa Allah - Tirmidhi 3383","30. Mangez halal et bon - Coran 2:168","31. Corps nourri haram Enfer - Ahmad","32. Cherchez savoir du berceau a tombe - Bayhaqi","33. Fais bien comme si tu vois Allah - Bukhari 50","34. Meilleure aumone quand en bonne sante - Bukhari 1419","35. Temps entre prieres expiation - Muslim 233","36. Fajr groupe vaut nuit entiere - Muslim 656","37. Aime pauvres et rapproche-toi - Tirmidhi 2352","38. Nul sauve par actes seuls mais misericorde - Bukhari 5673","39. Dis verite meme amere - Ibn Hibban","40. Priere lumiere aumone preuve - Muslim 223"
-]
-QUESTIONS_20 = [
-    {"q":"1. Utilisez-vous produits avec ingredients douteux?","options":["Jamais","Parfois","Souvent","Toujours"]},
-    {"q":"2. Verifiez-vous E-numbers avant acheter?","options":["Toujours","Souvent","Rarement","Jamais"]},
-    {"q":"3. Savez-vous E471 peut etre porc?","options":["Oui je sais","Non","J ai entendu","Pas sur"]},
-    {"q":"4. Le porc est Halal?","options":["Haram interdit","Halal autorise","Douteux","Je ne sais pas"]},
-    {"q":"5. Gelatine porcine Halal?","options":["Haram","Halal","Douteux","Ca depend"]},
-    {"q":"6. Consommez sans verifier?","options":["Jamais","Parfois","Souvent","Toujours"]},
-    {"q":"7. App utile pour Halal?","options":["Tres utile","Utile","Peu utile","Pas utile"]},
-    {"q":"8. Lisez-vous ingredients?","options":["Toujours","Souvent","Parfois","Jamais"]},
-    {"q":"9. Savez-vous ce que veut dire Halal?","options":["Oui tres bien","Oui un peu","Non","Vaguement"]},
-    {"q":"10. Deja mange Haram par erreur?","options":["Oui","Non","Peut-etre","Je ne sais pas"]},
-    {"q":"11. Voulez-vous devenir VIP 1500F?","options":["Oui","Non","Peut-etre plus tard","Je reflechis"]},
-    {"q":"12. Design app vous plait?","options":["Beaucoup","Oui","Moyen","Non"]},
-    {"q":"13. 5 essais gratuits suffisent?","options":["Oui","Non","Il faut plus","Il faut illimite"]},
-    {"q":"14. Recommanderiez-vous app?","options":["Oui certainement","Oui","Peut-etre","Non"]},
-    {"q":"15. Quelle partie preferez-vous?","options":["Scanner","Aliments","Coran","Douas"]},
-    {"q":"16. Utilisez-vous Coran dans app?","options":["Tous les jours","Souvent","Rarement","Jamais"]},
-    {"q":"17. Douas vous aident?","options":["Beaucoup","Oui","Un peu","Non"]},
-    {"q":"18. Suggestions?","options":["Ajouter plus aliments","Ajouter audio","Ajouter Qibla","Tout est bien"]},
-    {"q":"19. Niveau connaissance Halal?","options":["Expert","Moyen","Debutant","Je decouvre"]},
-    {"q":"20. Note globale app sur 10?","options":["10 Excellent","8-9 Tres bien","5-7 Bien","1-4 A ameliorer"]},
-]
+ALIMENTS_HALAL = ["Poulet halal egorge selon islam","Boeuf halal egorge","Mouton halal egorge","Poisson tout type hareng thon sardine","Crevettes halal","Riz blanc","Mil","Mais","Arachide","Mangue","Banane","Orange","Tomate","Oignon","Pomme terre","Manioc","Lait vache halal","Miel pur 100%","Dattes Ajwa","Huile palme","The vert","Eau minerale"]
+ALIMENTS_HARAM = ["Porc toute partie HARAM","Jambon porc HARAM","Vin rouge HARAM alcool","Biere HARAM","Sang animal HARAM","Gelatine porcine E441 HARAM","E120 Cochenille HARAM"]
+ALIMENTS_DOUTEUX = ["E102 Tartrazine Douteux","E120 Cochenille HARAM","E150a Caramel Halal","E322 Lecithine Halal si soja","E441 Gelatine HARAM si porc","E471 Mono-diglycerides DOUTEUX PEUT ETRE PORC"]
+SOURATES_114 = ["1 Al-Fatiha - Ouverture - 7 versets","2 Al-Baqara - Vache - 286","3 Al-Imran - Famille Imran - 200","4 An-Nisa - Femmes - 176","5 Al-Maida - Table Servie - 120","6 Al-Anam - Bestiaux - 165","7 Al-Araf - Murettes - 206","8 Al-Anfal - Butin - 75","9 At-Tawba - Repentir - 129","10 Younus - Jonas - 109","11 Houd - 123","12 Youssouf - Joseph - 111","13 Ar-Raad - Tonnerre - 43","14 Ibrahim - Abraham - 52","15 Al-Hijr - 99","16 An-Nahl - Abeilles - 128","17 Al-Isra - Voyage Nocturne - 111","18 Al-Kahf - Caverne - 110","19 Maryam - Marie - 98","20 Ta-Ha - 135","21 Al-Anbiya - Prophetes - 112","22 Al-Hajj - Pelerinage - 78","23 Al-Muminune - Croyants - 118","24 An-Nour - Lumiere - 64","25 Al-Furqane - Discernement - 77","26 Ach-Chuara - Poetes - 227","27 An-Naml - Fourmis - 93","28 Al-Qasas - Recit - 88","29 Al-Ankabut - Araignee - 69","30 Ar-Rum - Romains - 60","31 Luqman - 34","32 As-Sajda - Prosternation - 30","33 Al-Ahzab - Coalises - 73","34 Saba - 54","35 Fatir - Createur - 45","36 Ya-Sin - 83","37 As-Saffat - Rangees - 182","38 Sad - 88","39 Az-Zumar - Groupes - 75","40 Ghafir - Pardonneur - 85","41 Fussilat - 54","42 Ach-Chura - Concertation - 53","43 Az-Zukhruf - Ornement - 89","44 Ad-Dukhan - Fumee - 59","45 Al-Jathya - Agenouillee - 37","46 Al-Ahqaf - Dunes - 35","47 Muhammad - 38","48 Al-Fath - Victoire - 29","49 Al-Hujurat - Appartements - 18","50 Qaf - 45","51 Adh-Dhariyat - 60","52 At-Tur - Mont Sinai - 49","53 An-Najm - Etoile - 62","54 Al-Qamar - Lune - 55","55 Ar-Rahman - Misericordieux - 78","56 Al-Waqia - Evenement - 96","57 Al-Hadid - Fer - 29","58 Al-Mujadala - Discussion - 22","59 Al-Hachr - Exode - 24","60 Al-Mumtahana - Eprouvee - 13","61 As-Saff - Rang - 14","62 Al-Jumua - Vendredi - 11","63 Al-Munafiqun - Hypocrites - 11","64 At-Taghabun - Grande Perte - 18","65 At-Talaq - Divorce - 12","66 At-Tahrim - Interdiction - 12","67 Al-Mulk - Royaute - 30","68 Al-Qalam - Plume - 52","69 Al-Haqqa - 52","70 Al-Maarij - Voies Ascension - 44","71 Nouh - Noe - 28","72 Al-Jinn - Djinns - 28","73 Al-Muzzammil - Enveloppe - 20","74 Al-Muddathir - Revete manteau - 56","75 Al-Qiyama - Resurrection - 40","76 Al-Insan - Homme - 31","77 Al-Mursalat - Envoyes - 50","78 An-Naba - Nouvelle - 40","79 An-Naziat - Anges arrachent ames - 46","80 Abasa - Renfrogne - 42","81 At-Takwir - Obscurcissement - 29","82 Al-Infitar - Rupture - 19","83 Al-Mutaffifin - Fraudeurs - 36","84 Al-Inchiqaq - Dechirure - 25","85 Al-Buruj - Constellations - 22","86 At-Tariq - Astre Nocturne - 17","87 Al-Ala - Tres-Haut - 19","88 Al-Ghachiya - Enveloppante - 26","89 Al-Fajr - Aube - 30","90 Al-Balad - Cite - 20","91 Ach-Chams - Soleil - 15","92 Al-Layl - Nuit - 21","93 Ad-Duha - Jour Montant - 11","94 Ach-Charh - Ouverture - 8","95 At-Tin - Figuier - 8","96 Al-Alaq - Adherence - 19","97 Al-Qadr - Destinee - 5","98 Al-Bayyina - Preuve - 8","99 Az-Zalzala - Secousse - 8","100 Al-Adiyat - Coursiers - 11","101 Al-Qaria - Fracas - 11","102 At-Takatur - Course richesses - 8","103 Al-Asr - Temps - 3","104 Al-Humaza - Calomniateurs - 9","105 Al-Fil - Elephant - 5","106 Quraich - Coraich - 4","107 Al-Maun - Ustensile - 7","108 Al-Kawthar - Abondance - 3","109 Al-Kafirun - Infideles - 6","110 An-Nasr - Secours - 3","111 Al-Masad - Fibres - 5","112 Al-Ikhlas - Monotheisme Pur - 4","113 Al-Falaq - Aube Naissante - 5","114 An-Nas - Hommes - 6"]
+DUAS_50 = [{"t":"1 Avant manger","ar":"بسم الله","fr":"Au nom d Allah"},{"t":"2 Apres manger","ar":"الحمد لله الذي اطعمنا","fr":"Louange a Allah"},{"t":"3 Avant dormir","ar":"باسمك اللهم اموت واحيا","fr":"En Ton nom"},{"t":"4 Au reveil","ar":"الحمد لله الذي احيانا","fr":"Louange a Allah"}]
+HADITHS_40 = ["1. Les actions ne valent que par intentions - Bukhari 1","2. Halal clair Haram clair entre deux douteux - Bukhari 52","3. Aime pour ton frere ce que tu aimes pour toi - Bukhari 13"]
+QUESTIONS_20 = [{"q":"1. Utilisez-vous produits avec ingredients douteux?","options":["Jamais","Parfois","Souvent","Toujours"]}]
 
 def load_json(f, d):
     if os.path.exists(f):
@@ -148,7 +97,7 @@ users=load_json(USERS_FILE,{})
 comments=load_json(COMMENTS_FILE,[])
 sondages=load_json(SONDAGE_FILE,[])
 
-st.set_page_config(page_title="Scanner Halal V34.1", page_icon="🕌", layout="centered")
+st.set_page_config(page_title="Scanner Halal", page_icon="🕌", layout="centered")
 st.markdown("""
 <style>
 #MainMenu{visibility:hidden} footer{visibility:hidden} header{visibility:hidden}
@@ -163,8 +112,6 @@ if 'user' not in st.session_state: st.session_state.user=None
 if 'page' not in st.session_state: st.session_state.page="auth"
 if 'reset_code' not in st.session_state: st.session_state.reset_code=None
 if 'scan_mode' not in st.session_state: st.session_state.scan_mode=None
-if 'sondage_answers' not in st.session_state: st.session_state.sondage_answers={}
-if 'show_eval' not in st.session_state: st.session_state.show_eval=False
 if 'bottom_nav' not in st.session_state: st.session_state.bottom_nav="Home"
 if 'selected_menu' not in st.session_state: st.session_state.selected_menu=None
 if 'ad_watching' not in st.session_state: st.session_state.ad_watching=False
@@ -173,11 +120,11 @@ if 'ad_start_time' not in st.session_state: st.session_state.ad_start_time=None
 if st.session_state.page=="auth":
     try: st.image("logo.jpeg", use_container_width=True)
     except: st.markdown("<h1 style='text-align:center;'>🕌 Scanner Halal</h1>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center;color:#0a2a6b;'>Bienvenue V34.1</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;color:#0a2a6b;'>Bienvenue 🕌</h2>", unsafe_allow_html=True)
     t1,t2,t3=st.tabs(["Connexion","Inscription","Mot de passe oublie"])
     with t1:
         e=st.text_input("Email", key="email_connexion").strip()
-        p=st.text_input("Mot de passe (lettres+chiffres)",type="password", key="pwd_connexion")
+        p=st.text_input("Mot de passe",type="password", key="pwd_connexion")
         if st.button("Se connecter",type="primary",use_container_width=True):
             u=users.get(e)
             if u and u.get('pwd')==p:
@@ -195,9 +142,9 @@ if st.session_state.page=="auth":
             if not nom or not numero or not er or not p1: st.error("Remplis tous les champs")
             elif not is_valid_pwd(p1): st.error("Mot de passe doit avoir lettres + chiffres minimum 6 caracteres ex: baba2000")
             elif p1!=p2: st.error("Mots de passe differents")
-            elif er in users: st.error("Email deja utilise va dans Connexion")
+            elif er in users: st.error("Email deja utilise")
             else:
-                users[er]={'nom':nom,'wave':f"{extract_code(pays)} {numero}",'pays':pays,'pwd':p1,'scans':0,'is_vip':False,'history':[],'sondage_history':[],'bonus_scans':0,'profile_pic':None,'cover_pic':None}
+                users[er]={'nom':nom,'wave':f"{extract_code(pays)} {numero}",'pays':pays,'pwd':p1,'scans':0,'is_vip':False,'history':[],'bonus_scans':0,'profile_pic':None,'cover_pic':None}
                 save_json(USERS_FILE,users); st.success("Compte cree! Va dans Connexion"); st.balloons()
     with t3:
         ef=st.text_input("Email", key="email_oublie").strip()
@@ -207,12 +154,10 @@ if st.session_state.page=="auth":
             else: st.error("Email non trouve")
         if st.session_state.reset_code:
             ci=st.text_input("Code recu").strip()
-            np=st.text_input("Nouveau mot de passe (lettres+chiffres)",type="password", key="new_pwd")
+            np=st.text_input("Nouveau mot de passe",type="password", key="new_pwd")
             if st.button("Reinitialiser"):
                 if ci==st.session_state.reset_code:
-                    if not is_valid_pwd(np): st.error("Lettres + chiffres requis")
-                    else:
-                        users[st.session_state.reset_email]['pwd']=np; save_json(USERS_FILE,users); st.success("Mot de passe change! Va dans Connexion"); st.session_state.reset_code=None
+                    users[st.session_state.reset_email]['pwd']=np; save_json(USERS_FILE,users); st.success("Mot de passe change!"); st.session_state.reset_code=None
                 else: st.error("Code faux")
     st.stop()
 
@@ -223,8 +168,6 @@ user_email=st.session_state.user
 user=users[user_email]
 if 'profile_pic' not in user:
     users[user_email]['profile_pic']=None; users[user_email]['cover_pic']=None; save_json(USERS_FILE,users)
-if 'sondage_history' not in user:
-    users[user_email]['sondage_history']=[]; save_json(USERS_FILE,users)
 
 profile_path = user.get('profile_pic')
 cover_path = user.get('cover_pic')
@@ -247,46 +190,20 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-if st.session_state.bottom_nav=="Home":
-    st.markdown(f"""
-    <div style="background:#0a1433; padding:10px; display:flex; justify-content:center; margin-bottom:10px; border-radius:8px;">
-    <div style="background:linear-gradient(90deg,#ff0030,#ff1744); border-left:4px solid #b00020; border-right:4px solid #b00020; padding:8px 15px; display:flex; align-items:center; width:95%; max-width:340px;">
-      <div style="background:white; color:#ff0030; width:26px; height:20px; display:flex; align-items:center; justify-content:center; font-size:12px; border-radius:2px; margin-right:10px;">▶</div>
-      <div style="background:white; color:#ff0030; padding:3px 6px; border-radius:3px; margin-right:10px; font-size:16px; font-weight:bold;">⤴</div>
-      <div style="color:white; font-weight:900; font-size:13px;">SCANNER PLUS<br><span style="font-size:10px;">REGARDER PUB = +1 SCAN</span></div>
-    </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with st.expander("📸 Changer photo de profil et couverture"):
-    col_p1, col_p2 = st.columns(2)
-    with col_p1:
-        new_profile = st.file_uploader("Photo de profil", type=['jpg','png','jpeg'], key="profile_upload")
-        if new_profile:
-            path = save_image(new_profile, PROFILE_FOLDER, user_email, "profile")
-            if path: users[user_email]['profile_pic']=path; save_json(USERS_FILE,users); st.success("Photo ajoutee!"); time.sleep(1); st.rerun()
-    with col_p2:
-        new_cover = st.file_uploader("Photo de couverture", type=['jpg','png','jpeg'], key="cover_upload")
-        if new_cover:
-            path = save_image(new_cover, COVER_FOLDER, user_email, "cover")
-            if path: users[user_email]['cover_pic']=path; save_json(USERS_FILE,users); st.success("Couverture ajoutee!"); time.sleep(1); st.rerun()
-
 with st.sidebar:
-    st.markdown("### Menu")
-    if profile_path and os.path.exists(profile_path): st.image(profile_path, width=80)
-    st.write(f"**{user.get('nom','')}**")
-    menu=st.radio("NAVIGATION", ["Home","Aliments","Ma Liste","Jeu","Profil","Parametres","Aide","Notice","Langue","Coran","Hadiths","Douas"], label_visibility="collapsed")
+    menu=st.radio("NAVIGATION", ["Home","Aliments","Ma Liste","Jeu","Profil","Parametres","Coran","Hadiths","Douas"], label_visibility="collapsed")
     if st.button("Deconnexion", use_container_width=True):
-        st.session_state.user=None; st.session_state.page="auth"; st.session_state.scan_mode=None; st.session_state.sondage_answers={}; st.session_state.show_eval=False; st.session_state.bottom_nav="Home"; st.session_state.selected_menu=None; st.session_state.ad_watching=False; st.rerun()
+        st.session_state.user=None; st.session_state.page="auth"; st.rerun()
 
 if st.session_state.get('selected_menu'):
     menu = st.session_state.selected_menu; st.session_state.selected_menu = None
 
 def vip_required_page(nom_page):
-    st.markdown(f"""<div class="card-vip"><div style="font-size:60px;">🔒</div><h2 style="color:gold;">{nom_page} - VIP Seulement</h2><p>Devenez VIP 1500F</p></div>""", unsafe_allow_html=True)
+    show_back_button()
+    st.markdown(f"""<div class="card-vip"><h2 style="color:gold;">{nom_page} - VIP Seulement</h2></div>""", unsafe_allow_html=True)
     st.link_button(f"PAYER 1500F WAVE", WAVE_LINK, type="primary", use_container_width=True)
     if st.button(f"J ai paye - Activer VIP", use_container_width=True, key=f"vip_{nom_page}"):
-        users[user_email]['is_vip']=True; save_json(USERS_FILE,users); st.balloons(); st.success("VIP active!"); st.rerun()
+        users[user_email]['is_vip']=True; save_json(USERS_FILE,users); st.balloons(); st.rerun()
     st.stop()
 
 if menu=="Home":
@@ -305,47 +222,153 @@ if menu=="Home":
         show_back_button()
         nom = st.session_state.bottom_nav.replace("VIP_","")
         st.markdown(f"""<div class="card-vip"><h2 style="color:gold;">{nom} - VIP Seulement</h2></div>""", unsafe_allow_html=True)
-        st.link_button(f"PAYER 1500F WAVE POUR {nom}", WAVE_LINK, type="primary", use_container_width=True)
+        st.link_button(f"PAYER 1500F WAVE", WAVE_LINK, type="primary", use_container_width=True)
         if st.button("J'ai paye - Activer VIP", use_container_width=True):
             users[user_email]['is_vip']=True; save_json(USERS_FILE,users); st.balloons(); st.session_state.bottom_nav="Home"; st.rerun()
         st.stop()
 
     if st.session_state.bottom_nav=="Qibla":
-        show_back_button()
-        st.title("🧭 Qibla - 4 formats non bloquants")
-        st.info("GPS facultatif - tu peux entrer manuellement")
-        lat=st.number_input("Latitude",value=5.36)
-        lon=st.number_input("Longitude",value=-4.00)
-        tab1,tab2,tab3,tab4=st.tabs(["Classique","Moderne","Rose","Numérique"])
-        with tab1: st.markdown(f"<div class='card'>🧭 Classique: Qibla 67° depuis {lat},{lon}</div>", unsafe_allow_html=True)
-        with tab2: st.markdown("<div class='card'>✨ Moderne: Flèche animée -> Kaaba</div>", unsafe_allow_html=True)
-        with tab3: st.markdown("<div class='card'>🌹 Rose des vents: N S E O + Kaaba</div>", unsafe_allow_html=True)
-        with tab4: st.markdown("<div class='card'>🔢 Numérique: 67.2° NE</div>", unsafe_allow_html=True)
+        if st.button("⬅️", key="back_qibla"):
+            st.session_state.bottom_nav="Home"; st.rerun()
+        st.title("🕋 Qibla")
+        qibla_html = """
+        <div style="font-family:sans-serif; text-align:center; background:white; padding:15px; border-radius:12px">
+            <button id="locBtn" style="background:linear-gradient(90deg,#0a2a6b,#1a4bb8); color:white; padding:14px 20px; border-radius:12px; border:none; font-weight:bold; width:100%">📍 Activer localisation & Chercher Qibla</button>
+            <div id="infoBox" style="margin-top:15px; padding:12px; background:#f0f6ff; border-radius:10px; border-left:4px solid #0a2a6b; text-align:left; display:none">
+                <div id="coords" style="font-size:13px; color:#0a2a6b; font-weight:bold"></div>
+                <div id="qiblaInfo" style="font-size:16px; font-weight:bold; color:#00a651; margin-top:5px"></div>
+            </div>
+            <div style="display:flex; gap:8px; justify-content:center; margin-top:15px">
+                <button onclick="setMode('classique')" id="btn-classique" style="padding:8px 12px; border-radius:20px; border:2px solid #0a2a6b; background:#0a2a6b; color:white; font-size:12px">Classique</button>
+                <button onclick="setMode('moderne')" id="btn-moderne" style="padding:8px 12px; border-radius:20px; border:1px solid #ddd; background:white; font-size:12px">Moderne</button>
+                <button onclick="setMode('rose')" id="btn-rose" style="padding:8px 12px; border-radius:20px; border:1px solid #ddd; background:white; font-size:12px">Rose</button>
+                <button onclick="setMode('num')" id="btn-num" style="padding:8px 12px; border-radius:20px; border:1px solid #ddd; background:white; font-size:12px">Numérique</button>
+            </div>
+            <div style="position:relative; width:260px; height:260px; margin:25px auto; border-radius:50%; border:10px solid #0a2a6b; background:radial-gradient(circle, #fff, #e6f0ff); box-shadow:0 8px 20px rgba(0,0,0,0.2)">
+                <div style="position:absolute; top:8px; left:50%; transform:translateX(-50%); font-weight:900; color:red; font-size:18px">N</div>
+                <div style="position:absolute; bottom:8px; left:50%; transform:translateX(-50%); font-weight:900">S</div>
+                <div style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-weight:900">O</div>
+                <div style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-weight:900">E</div>
+                <div id="arrow" style="position:absolute; top:50%; left:50%; width:6px; height:100px; background:linear-gradient(to top, #0a2a6b, #00c6ff); transform-origin:bottom center; transform:translate(-50%, -100%) rotate(0deg); border-radius:4px; transition:transform 0.8s">
+                    <div style="width:0; height:0; border-left:14px solid transparent; border-right:14px solid transparent; border-bottom:24px solid #ff0030; position:absolute; top:-22px; left:50%; transform:translateX(-50%)"></div>
+                </div>
+                <div style="position:absolute; top:50%; left:50%; width:28px; height:28px; background:#0a2a6b; border-radius:50%; transform:translate(-50%,-50%); border:3px solid gold"></div>
+                <div id="kaabaIcon" style="position:absolute; top:50%; left:50%; font-size:28px; transform:translate(-50%, -150%)">🕋</div>
+            </div>
+            <div id="status" style="font-size:12px; color:gray">Clique pour activer GPS. Bouge ton téléphone ensuite.</div>
+        </div>
+        <script>
+        let qiblaAngle = 67.5;
+        const kaabaLat = 21.4225 * Math.PI/180;
+        const kaabaLon = 39.8262 * Math.PI/180;
+        function setMode(m){
+            document.querySelectorAll('[id^=btn-]').forEach(b=>{b.style.background='white'; b.style.color='black'; b.style.border='1px solid #ddd'});
+            document.getElementById('btn-'+m).style.background='#0a2a6b';
+            document.getElementById('btn-'+m).style.color='white';
+        }
+        function calculateQibla(lat, lon){
+            const latRad = lat * Math.PI/180;
+            const lonRad = lon * Math.PI/180;
+            const dLon = kaabaLon - lonRad;
+            const y = Math.sin(dLon);
+            const x = Math.cos(latRad)*Math.tan(kaabaLat) - Math.sin(latRad)*Math.cos(dLon);
+            let brng = Math.atan2(y, x) * 180/Math.PI;
+            return (brng + 360) % 360;
+        }
+        document.getElementById('locBtn').onclick = function(){
+            const btn = this;
+            btn.innerText = '📡 Recherche GPS...';
+            if(navigator.geolocation){
+                navigator.geolocation.getCurrentPosition(function(pos){
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    qiblaAngle = calculateQibla(lat, lon);
+                    document.getElementById('infoBox').style.display='block';
+                    document.getElementById('coords').innerHTML = '📍 Lat: ' + lat.toFixed(6) + '<br>📍 Lon: ' + lon.toFixed(6);
+                    document.getElementById('qiblaInfo').innerText = '🕋 Qibla: ' + qiblaAngle.toFixed(2) + '°';
+                    document.getElementById('status').innerHTML = '<b style="color:green">✅ Qibla trouvée!</b>';
+                    btn.innerText = '✅ Qibla trouvée';
+                    btn.style.background = '#00a651';
+                    document.getElementById('arrow').style.transform = 'translate(-50%, -100%) rotate('+qiblaAngle+'deg)';
+                }, function(){
+                    document.getElementById('infoBox').style.display='block';
+                    document.getElementById('coords').innerText = 'GPS refusé - Abidjan 5.36, -4.00';
+                    qiblaAngle = calculateQibla(5.36, -4.00);
+                    document.getElementById('qiblaInfo').innerText = '🕋 Qibla: ' + qiblaAngle.toFixed(2) + '°';
+                    document.getElementById('arrow').style.transform = 'translate(-50%, -100%) rotate('+qiblaAngle+'deg)';
+                }, {enableHighAccuracy:true});
+            }
+        };
+        if(window.DeviceOrientationEvent){
+            window.addEventListener('deviceorientation', function(e){
+                let heading = e.webkitCompassHeading;
+                if(heading === undefined) heading = 360 - e.alpha;
+                if(heading){
+                    let finalAngle = qiblaAngle - heading;
+                    document.getElementById('arrow').style.transform = 'translate(-50%, -100%) rotate('+finalAngle+'deg)';
+                }
+            }, true);
+        }
+        </script>
+        """
+        st.components.v1.html(qibla_html, height=650)
         st.stop()
 
     elif st.session_state.bottom_nav=="Calendrier":
-        show_back_button()
+        if st.button("⬅️", key="back_cal"):
+            st.session_state.bottom_nav="Home"
+            st.rerun()
+
         st.title("📅 Calendrier")
         today = date.today()
         d_h, m_h, y_h = gregorian_to_hijri(today)
+
+        calendar.setfirstweekday(calendar.MONDAY)
+        year = today.year
+        month = today.month
+        month_names = ["", "Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"]
+        month_name = month_names[month]
+
+        month_days = calendar.monthcalendar(year, month)
+        html_cal = f"""
+        <div style="background:white; padding:12px; border-radius:12px; border:1px solid #eee">
+        <div style="text-align:center; font-weight:bold; font-size:18px; color:#0a2a6b; margin-bottom:8px">{month_name} {year}</div>
+        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; font-size:12px; font-weight:bold; color:#888">
+            <div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; margin-top:6px">
+        """
+        for week in month_days:
+            for d in week:
+                if d == 0:
+                    html_cal += '<div style="padding:10px"></div>'
+                elif d == today.day:
+                    html_cal += f'<div style="padding:10px; background:#0a2a6b; color:white; border-radius:8px; font-weight:bold">{d}</div>'
+                else:
+                    html_cal += f'<div style="padding:10px; background:#f5f7ff; border-radius:8px">{d}</div>'
+        html_cal += "</div></div>"
+
         col1, col2 = st.columns(2)
         with col1:
             st.markdown(f"""
-            <div style="background:white; padding:15px; border-radius:12px; border:1px solid #eee; text-align:center">
+            <div style="background:white; padding:10px; border-radius:12px; border-left:5px solid #0072ff; margin-bottom:8px; text-align:center">
             <b>🌍 Grégorien</b><br>
-            <span style="font-size:32px; font-weight:bold; color:#0a2a6b">{today.day}</span><br>
-            <b>{today.strftime('%B')}</b> {today.year}<br>
-            <small style="color:gray">{today.strftime('%A')}</small>
+            <span style="font-size:20px; font-weight:bold; color:#0a2a6b">{today.day} {month_name} {year}</span>
             </div>""", unsafe_allow_html=True)
-            st.text(calendar.month(today.year, today.month))
+            st.components.v1.html(html_cal, height=300)
+
         with col2:
             st.markdown(f"""
-            <div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); padding:15px; border-radius:12px; color:white; text-align:center; min-height:190px">
+            <div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); padding:15px; border-radius:12px; color:white; text-align:center; min-height:280px">
             <b style="color:gold">🌙 Hijri</b><br>
-            <span style="font-size:32px; font-weight:bold">{d_h}</span><br>
-            <b style="color:gold; font-size:18px">{HIJRI_MONTHS[m_h-1]}</b><br>
-            <b>{y_h} AH</b>
+            <span style="font-size:36px; font-weight:bold">{d_h}</span><br>
+            <b style="color:gold; font-size:20px">{HIJRI_MONTHS[m_h-1]}</b><br>
+            <b style="font-size:20px">{y_h} AH</b><br><br>
+            <div style="background:rgba(255,255,255,0.15); padding:8px; border-radius:8px; font-size:12px">
+            {d_h} {HIJRI_MONTHS[m_h-1]} {y_h}
+            </div>
             </div>""", unsafe_allow_html=True)
+
         st.markdown("---")
         st.subheader("🕌 Événements 2026")
         st.markdown("""
@@ -353,26 +376,22 @@ if menu=="Home":
         🌙 <b>Ramadan 1447</b> : 18 Février 2026<br>
         🎉 <b>Aïd al-Fitr</b> : 20 Mars 2026<br>
         🕋 <b>Aïd al-Adha</b> : 27 Mai 2026<br>
-        📅 <b>Mouharram 1448</b> : 16 Juin 2026<br>
-        🌟 <b>Mawlid</b> : 25 Août 2026
+        📅 <b>Mouharram 1448</b> : 16 Juin 2026
         </div>""", unsafe_allow_html=True)
         st.markdown("---")
         share_zone()
         st.stop()
 
-    st.markdown("""<div style="background:linear-gradient(90deg,#00c6ff,#0072ff); padding:15px; color:white; border-radius:12px; margin-bottom:10px"><b>Bienvenue Scanner Halal V34.1</b></div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="background:linear-gradient(90deg,#00c6ff,#0072ff); padding:15px; color:white; border-radius:12px; margin-bottom:10px"><b>Bienvenue Scanner Halal</b></div>""", unsafe_allow_html=True)
 
     scans_used = user['scans'] - user.get('bonus_scans',0)
     if not user['is_vip'] and scans_used>=5:
         st.error("🚫 5 essais gratuits utilises")
-        c_a, c_b = st.columns(2)
-        with c_a:
-            if st.button("📺 PUB 15s = +1 SCAN", use_container_width=True):
-                st.session_state.ad_watching = True
-                st.session_state.ad_start_time = time.time()
-                st.rerun()
-        with c_b:
-            st.link_button("💎 VIP 1500F ILLIMITE", WAVE_LINK, type="primary", use_container_width=True)
+        if st.button("📺 PUB 15s = +1 SCAN", use_container_width=True):
+            st.session_state.ad_watching = True
+            st.session_state.ad_start_time = time.time()
+            st.rerun()
+        st.link_button("💎 VIP 1500F ILLIMITE", WAVE_LINK, type="primary", use_container_width=True)
         if st.session_state.ad_watching:
             elapsed = time.time() - st.session_state.ad_start_time
             remaining = 15 - elapsed
@@ -383,31 +402,6 @@ if menu=="Home":
                 save_json(USERS_FILE,users); st.session_state.ad_watching=False; st.balloons(); st.success("+1 SCAN!"); st.rerun()
         st.stop()
 
-    st.markdown("### 📱 Menus")
-    m1, m2, m3 = st.columns(3)
-    with m1:
-        if st.button("🍎\nAliments 🔒", use_container_width=True):
-            if not user.get('is_vip'): st.session_state.bottom_nav="VIP_ALIMENTS"
-            else: st.session_state.selected_menu="Aliments"
-            st.rerun()
-        if st.button("📜\nCoran ✅", use_container_width=True):
-            st.session_state.selected_menu="Coran"; st.rerun()
-    with m2:
-        if st.button("📋\nMa Liste", use_container_width=True):
-            st.session_state.selected_menu="Ma Liste"; st.rerun()
-        if st.button("🤲\nDouas 🔒", use_container_width=True):
-            if not user.get('is_vip'): st.session_state.bottom_nav="VIP_DOUAS"
-            else: st.session_state.selected_menu="Douas"
-            st.rerun()
-    with m3:
-        if st.button("🎮\nJeu", use_container_width=True):
-            st.session_state.selected_menu="Jeu"; st.rerun()
-        if st.button("📚\nHadiths 🔒", use_container_width=True):
-            if not user.get('is_vip'): st.session_state.bottom_nav="VIP_HADITHS"
-            else: st.session_state.selected_menu="Hadiths"
-            st.rerun()
-
-    st.markdown("---")
     st.markdown("### 📸 Scanner Halal")
     col1, col2 = st.columns(2)
     with col1:
@@ -438,81 +432,18 @@ if menu=="Home":
                 users[user_email]['history'].append({'date':datetime.now().strftime("%d/%m/%Y %H:%M"),'result':result,'detail':detail})
                 save_json(USERS_FILE,users); st.balloons()
                 st.session_state.scan_mode=None
-                st.success("Scan termine")
 
     share_zone()
 
-elif menu=="Jeu":
-    st.title("Jeu - 20 Questions")
-    if not st.session_state.show_eval:
-        for i,q in enumerate(QUESTIONS_20):
-            st.markdown(f"<div style='background:white; padding:10px; border-left:5px solid #0072ff; border-radius:8px; margin:5px 0;'><b>{q['q']}</b></div>", unsafe_allow_html=True)
-            ans = st.radio(f"Q{i+1}", q['options'], key=f"sondage_q_{i}", label_visibility="collapsed")
-            st.session_state.sondage_answers[f"q{i+1}"]=ans
-        if st.button("VALIDER ET EVALUER", type="primary", use_container_width=True):
-            entry = {'email':user_email,'nom':user.get('nom'),'date':datetime.now().isoformat(),'date_str':datetime.now().strftime("%d/%m/%Y %H:%M:%S"),'reponses':st.session_state.sondage_answers.copy()}
-            sondages.append(entry); save_json(SONDAGE_FILE,sondages); users[user_email]['sondage_history'].append(entry); save_json(USERS_FILE,users); st.session_state.show_eval=True; st.rerun()
-    else:
-        st.balloons(); st.success("Valide!")
-        for i,q in enumerate(QUESTIONS_20):
-            rep = st.session_state.sondage_answers.get(f"q{i+1}", "")
-            st.markdown(f"<div class='card'><b>{q['q']}</b><br>-> <b style='color:#0072ff'>{rep}</b></div>", unsafe_allow_html=True)
-        time.sleep(5)
-        st.session_state.sondage_answers={}; st.session_state.show_eval=False; st.rerun()
-
-elif menu=="Ma Liste":
-    st.title("Ma Liste")
-    for h in reversed(user.get('history',[])):
-        c = "green" if "HALAL" in h['result'] else "red" if "HARAM" in h['result'] else "orange"
-        st.markdown(f"<div class='card' style='border-left:5px solid {c}'><b>{h['date']}</b><br>{h['result']}</div>", unsafe_allow_html=True)
-
-elif menu=="Aliments":
-    if not user.get('is_vip'): vip_required_page("Aliments 150")
-    st.title("Aliments 150 - VIP")
-    s=st.text_input("Chercher").lower()
-    t1,t2,t3=st.tabs([f"HALAL {len(ALIMENTS_HALAL)}", f"HARAM {len(ALIMENTS_HARAM)}", f"DOUTEUX {len(ALIMENTS_DOUTEUX)}"])
-    with t1:
-        for a in ALIMENTS_HALAL:
-            if s in a.lower() or not s: st.markdown(f"<div class='card' style='border-left:5px solid green'>HALAL {a}</div>", unsafe_allow_html=True)
-    with t2:
-        for a in ALIMENTS_HARAM:
-            if s in a.lower() or not s: st.markdown(f"<div class='card' style='border-left:5px solid red'>HARAM {a}</div>", unsafe_allow_html=True)
-    with t3:
-        for a in ALIMENTS_DOUTEUX:
-            if s in a.lower() or not s: st.markdown(f"<div class='card' style='border-left:5px solid orange'>DOUTEUX {a}</div>", unsafe_allow_html=True)
-
-elif menu=="Coran":
-    st.title("Coran 114 Sourates")
-    q=st.text_input("Chercher sourate").lower()
-    for s in SOURATES_114:
-        if q in s.lower() or not q: st.markdown(f"<div class='card-dark'><b>{s}</b></div>", unsafe_allow_html=True)
-
-elif menu=="Douas":
-    if not user.get('is_vip'): vip_required_page("Douas 50")
-    st.title("Douas 50 - VIP")
-    for d in DUAS_50:
-        st.markdown(f"<div class='card'><b>{d['t']}</b><br><span style='color:green'>{d['ar']}</span><br><small>{d['fr']}</small></div>", unsafe_allow_html=True)
-
-elif menu=="Hadiths":
-    if not user.get('is_vip'): vip_required_page("Hadiths 40")
-    st.title("Hadiths 40 - VIP")
-    for h in HADITHS_40: st.markdown(f"<div class='card'>{h}</div>", unsafe_allow_html=True)
-
-elif menu=="Profil":
-    st.title("Profil")
-    st.write(user)
-
 elif menu=="Parametres":
     st.title("Parametres")
-    st.markdown(f"""<div class='card'><b>Version:</b> V34.1 Propre<br><b>Nom:</b> {user.get('nom')}<br><b>Email:</b> {user_email}<br><b>Wave:</b> {user.get('wave')}<br><b>VIP:</b> {'Oui' if user.get('is_vip') else 'Non'}<br></div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div class='card'><b>Nom:</b> {user.get('nom')}<br><b>Email:</b> {user_email}<br><b>VIP:</b> {'Oui' if user.get('is_vip') else 'Non'}</div>""", unsafe_allow_html=True)
     st.markdown("---")
     st.subheader("📤 Partager l'app")
-    st.write("Le lien est caché ici uniquement")
     if st.button("Afficher le lien de partage"):
         st.code(APP_LINK)
-        st.link_button("Partager sur WhatsApp", f"https://wa.me/?text=Decouvre Scanner Halal {APP_LINK}", use_container_width=True)
+        st.link_button("Partager sur WhatsApp", f"https://wa.me/?text={APP_LINK}", use_container_width=True)
 
-elif menu=="Aide":
-    st.title("Aide"); st.write("Aide")
 else:
     st.title(menu)
+    st.write("Page en construction")
