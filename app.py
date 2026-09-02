@@ -14,7 +14,7 @@ def gregorian_to_hijri(g_date):
     jd=d+(153*mm+2)//5+365*yy+yy//4-yy//100+yy//400-32045
     jd=jd-1948439+10632; n=(jd-1)//10631; jd=jd-10631*n+10632
     j=(jd-1)//354; l=jd-(j*354)-((3+11*j)//30)
-    mh=int((l-1)//29.5)+1;
+    mh=int((l-1)//29.5)+1
     if mh>12: mh=12
     dh=int(l-(mh-1)*29.5)
     if dh<1: dh=1
@@ -34,7 +34,9 @@ def show_back_button():
         st.session_state.bottom_nav="Home"; st.rerun()
 
 def share_zone():
-    st.link_button("📤 Partager l'app", f"https://wa.me/?text=Decouvre Scanner Halal {APP_LINK}", use_container_width=True)
+    st.markdown("""<div style="background:linear-gradient(90deg,#00c6ff,#0072ff); border-radius:16px; padding:4px; margin-top:8px"><div style="background:white; border-radius:12px; padding:2px; text-align:center">""", unsafe_allow_html=True)
+    st.link_button("📤 PARTAGER L'APPLI", f"https://wa.me/?text=Decouvre Scanner Halal {APP_LINK}", use_container_width=True)
+    st.markdown("</div></div>", unsafe_allow_html=True)
 
 def load_json(f,d):
     if os.path.exists(f):
@@ -48,11 +50,11 @@ def is_valid_pwd(p): return len(p)>=6 and re.search(r"[A-Za-z]",p) and re.search
 def extract_code(t):
     m=re.search(r"\+(\d+)",t); return "+"+m.group(1) if m else "+225"
 
-ALIMENTS_HALAL = ["Poulet halal","Boeuf halal","Mouton halal","Poisson thon","Riz","Mangue","Banane","Lait halal","Miel","Dattes"]
+ALIMENTS_HALAL = ["Poulet halal","Boeuf halal","Mouton halal","Poisson","Riz","Mangue","Banane","Lait halal","Miel","Dattes"]
 ALIMENTS_HARAM = ["Porc HARAM","Vin HARAM","Biere HARAM","Gelatine porcine E441 HARAM","E120 Cochenille HARAM"]
 SOURATES_114 = [f"{i+1}. Sourate {i+1}" for i in range(114)]
-HADITHS_40 = [f"Hadith {i+1}: Les actions ne valent que par intentions" for i in range(40)]
-DUAS_50 = [f"Doua {i+1}: Bismillah" for i in range(50)]
+HADITHS_40 = [f"Hadith {i+1}" for i in range(40)]
+DUAS_50 = [f"Doua {i+1}" for i in range(50)]
 
 users=load_json(USERS_FILE,{})
 
@@ -98,7 +100,7 @@ if st.session_state.page=="auth":
         p2=st.text_input("Confirmer",type="password",key="p2")
         if st.button("Creer mon compte",type="primary",use_container_width=True):
             if not nom or not numero or not er or not p1: st.error("Remplis tous les champs")
-            elif not is_valid_pwd(p1): st.error("Lettres + chiffres min 6 ex: baba2000")
+            elif not is_valid_pwd(p1): st.error("Lettres + chiffres min 6")
             elif p1!=p2: st.error("Mots de passe differents")
             elif er in users: st.error("Email deja utilise")
             else:
@@ -185,23 +187,17 @@ if menu=="Home":
                 st.session_state.selected_menu="Coran"; st.session_state.bottom_nav="Home"; st.rerun()
             st.markdown("""<div style="background:white; border-radius:16px; padding:20px; text-align:center; border:2px solid #eee; margin-top:12px"><div style="font-size:50px">📜</div><div style="font-weight:bold; margin-top:5px">HADITHS</div><div style="color:gold; background:#0a2a6b; display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; margin-top:4px">VIP 🔒</div></div>""", unsafe_allow_html=True)
             if st.button("Ouvrir Hadiths", use_container_width=True, key="open_hadiths"):
-                if user.get('is_vip'):
-                    st.session_state.selected_menu="Hadiths"; st.session_state.bottom_nav="Home"; st.rerun()
-                else:
-                    st.session_state.bottom_nav="VIP_HADITHS"; st.rerun()
+                if user.get('is_vip'): st.session_state.selected_menu="Hadiths"; st.session_state.bottom_nav="Home"; st.rerun()
+                else: st.session_state.bottom_nav="VIP_HADITHS"; st.rerun()
         with col2:
             st.markdown("""<div style="background:white; border-radius:16px; padding:20px; text-align:center; border:2px solid #eee;"><div style="font-size:50px">🍖</div><div style="font-weight:bold; margin-top:5px">ALIMENTS</div><div style="color:gold; background:#0a2a6b; display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; margin-top:4px">VIP 🔒</div></div>""", unsafe_allow_html=True)
             if st.button("Ouvrir Aliments", use_container_width=True, key="open_aliments"):
-                if user.get('is_vip'):
-                    st.session_state.selected_menu="Aliments"; st.session_state.bottom_nav="Home"; st.rerun()
-                else:
-                    st.session_state.bottom_nav="VIP_ALIMENTS"; st.rerun()
+                if user.get('is_vip'): st.session_state.selected_menu="Aliments"; st.session_state.bottom_nav="Home"; st.rerun()
+                else: st.session_state.bottom_nav="VIP_ALIMENTS"; st.rerun()
             st.markdown("""<div style="background:white; border-radius:16px; padding:20px; text-align:center; border:2px solid #eee; margin-top:12px"><div style="font-size:50px">🤲</div><div style="font-weight:bold; margin-top:5px">DOUAS</div><div style="color:gold; background:#0a2a6b; display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; margin-top:4px">VIP 🔒</div></div>""", unsafe_allow_html=True)
             if st.button("Ouvrir Douas", use_container_width=True, key="open_douas"):
-                if user.get('is_vip'):
-                    st.session_state.selected_menu="Douas"; st.session_state.bottom_nav="Home"; st.rerun()
-                else:
-                    st.session_state.bottom_nav="VIP_DOUAS"; st.rerun()
+                if user.get('is_vip'): st.session_state.selected_menu="Douas"; st.session_state.bottom_nav="Home"; st.rerun()
+                else: st.session_state.bottom_nav="VIP_DOUAS"; st.rerun()
         st.markdown("---"); share_zone(); st.stop()
 
     if st.session_state.bottom_nav=="Qibla":
@@ -214,12 +210,6 @@ if menu=="Home":
                 <div id="coords" style="font-size:13px; color:#0a2a6b; font-weight:bold"></div>
                 <div id="qiblaInfo" style="font-size:16px; font-weight:bold; color:#00a651; margin-top:5px"></div>
             </div>
-            <div style="display:flex; gap:8px; justify-content:center; margin-top:15px">
-                <button onclick="setMode('classique')" id="btn-classique" style="padding:8px 12px; border-radius:20px; border:2px solid #0a2a6b; background:#0a2a6b; color:white; font-size:12px">Classique</button>
-                <button onclick="setMode('moderne')" id="btn-moderne" style="padding:8px 12px; border-radius:20px; border:1px solid #ddd; background:white; font-size:12px">Moderne</button>
-                <button onclick="setMode('rose')" id="btn-rose" style="padding:8px 12px; border-radius:20px; border:1px solid #ddd; background:white; font-size:12px">Rose</button>
-                <button onclick="setMode('num')" id="btn-num" style="padding:8px 12px; border-radius:20px; border:1px solid #ddd; background:white; font-size:12px">Numérique</button>
-            </div>
             <div style="position:relative; width:260px; height:260px; margin:25px auto; border-radius:50%; border:10px solid #0a2a6b; background:radial-gradient(circle, #fff, #e6f0ff); box-shadow:0 8px 20px rgba(0,0,0,0.2)">
                 <div style="position:absolute; top:8px; left:50%; transform:translateX(-50%); font-weight:900; color:red; font-size:18px">N</div>
                 <div style="position:absolute; bottom:8px; left:50%; transform:translateX(-50%); font-weight:900">S</div>
@@ -227,19 +217,18 @@ if menu=="Home":
                 <div style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-weight:900">E</div>
                 <div id="arrow" style="position:absolute; top:50%; left:50%; width:6px; height:100px; background:linear-gradient(to top, #0a2a6b, #00c6ff); transform-origin:bottom center; transform:translate(-50%, -100%) rotate(0deg); border-radius:4px; transition:transform 0.8s"><div style="width:0; height:0; border-left:14px solid transparent; border-right:14px solid transparent; border-bottom:24px solid #ff0030; position:absolute; top:-22px; left:50%; transform:translateX(-50%)"></div></div>
                 <div style="position:absolute; top:50%; left:50%; width:28px; height:28px; background:#0a2a6b; border-radius:50%; transform:translate(-50%,-50%); border:3px solid gold"></div>
-                <div id="kaabaIcon" style="position:absolute; top:50%; left:50%; font-size:28px; transform:translate(-50%, -150%)">🕋</div>
+                <div style="position:absolute; top:50%; left:50%; font-size:28px; transform:translate(-50%, -150%)">🕋</div>
             </div>
-            <div id="status" style="font-size:12px; color:gray">Clique pour activer GPS. Bouge ton téléphone ensuite.</div>
+            <div id="status" style="font-size:12px; color:gray">Clique pour activer GPS.</div>
         </div>
         <script>
         let qiblaAngle=67.5; const kaabaLat=21.4225*Math.PI/180; const kaabaLon=39.8262*Math.PI/180;
-        function setMode(m){document.querySelectorAll('[id^=btn-]').forEach(b=>{b.style.background='white'; b.style.color='black'; b.style.border='1px solid #ddd'}); document.getElementById('btn-'+m).style.background='#0a2a6b'; document.getElementById('btn-'+m).style.color='white';}
         function calculateQibla(lat,lon){const latRad=lat*Math.PI/180; const lonRad=lon*Math.PI/180; const dLon=kaabaLon-lonRad; const y=Math.sin(dLon); const x=Math.cos(latRad)*Math.tan(kaabaLat)-Math.sin(latRad)*Math.cos(dLon); let brng=Math.atan2(y,x)*180/Math.PI; return (brng+360)%360;}
-        document.getElementById('locBtn').onclick=function(){const btn=this; btn.innerText='📡 Recherche GPS...'; if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(pos){const lat=pos.coords.latitude; const lon=pos.coords.longitude; qiblaAngle=calculateQibla(lat,lon); document.getElementById('infoBox').style.display='block'; document.getElementById('coords').innerHTML='📍 Lat: '+lat.toFixed(6)+'<br>📍 Lon: '+lon.toFixed(6); document.getElementById('qiblaInfo').innerText='🕋 Qibla: '+qiblaAngle.toFixed(2)+'°'; document.getElementById('status').innerHTML='<b style="color:green">✅ Qibla trouvée!</b>'; btn.innerText='✅ Qibla trouvée'; btn.style.background='#00a651'; document.getElementById('arrow').style.transform='translate(-50%, -100%) rotate('+qiblaAngle+'deg)';},function(){document.getElementById('infoBox').style.display='block'; document.getElementById('coords').innerText='GPS refusé - Abidjan 5.36, -4.00'; qiblaAngle=calculateQibla(5.36,-4.00); document.getElementById('qiblaInfo').innerText='🕋 Qibla: '+qiblaAngle.toFixed(2)+'°'; document.getElementById('arrow').style.transform='translate(-50%, -100%) rotate('+qiblaAngle+'deg)';},{enableHighAccuracy:true});}};
+        document.getElementById('locBtn').onclick=function(){const btn=this; btn.innerText='📡 Recherche GPS...'; if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(pos){const lat=pos.coords.latitude; const lon=pos.coords.longitude; qiblaAngle=calculateQibla(lat,lon); document.getElementById('infoBox').style.display='block'; document.getElementById('coords').innerHTML='📍 Lat: '+lat.toFixed(6)+'<br>📍 Lon: '+lon.toFixed(6); document.getElementById('qiblaInfo').innerText='🕋 Qibla: '+qiblaAngle.toFixed(2)+'°'; document.getElementById('status').innerHTML='<b style="color:green">✅ Qibla trouvée!</b>'; btn.innerText='✅ Qibla trouvée'; btn.style.background='#00a651'; document.getElementById('arrow').style.transform='translate(-50%, -100%) rotate('+qiblaAngle+'deg)';},function(){document.getElementById('infoBox').style.display='block'; document.getElementById('coords').innerText='GPS refusé - Abidjan'; qiblaAngle=calculateQibla(5.36,-4.00); document.getElementById('qiblaInfo').innerText='🕋 Qibla: '+qiblaAngle.toFixed(2)+'°'; document.getElementById('arrow').style.transform='translate(-50%, -100%) rotate('+qiblaAngle+'deg)';},{enableHighAccuracy:true});}};
         if(window.DeviceOrientationEvent){window.addEventListener('deviceorientation',function(e){let heading=e.webkitCompassHeading; if(heading===undefined) heading=360-e.alpha; if(heading){let finalAngle=qiblaAngle-heading; document.getElementById('arrow').style.transform='translate(-50%, -100%) rotate('+finalAngle+'deg)';}},true);}
         </script>
         """
-        st.components.v1.html(qibla_html, height=650); st.stop()
+        st.components.v1.html(qibla_html, height=600); st.stop()
 
     elif st.session_state.bottom_nav=="Calendrier":
         if st.button("⬅️", key="back_cal"): st.session_state.bottom_nav="Home"; st.rerun()
@@ -266,10 +255,10 @@ if menu=="Home":
         st.markdown("""<div style="background:white; padding:12px; border-radius:12px; border-left:5px solid #00a651">🌙 <b>Ramadan 1447</b> : 18 Février 2026<br>🎉 <b>Aïd al-Fitr</b> : 20 Mars 2026<br>🕋 <b>Aïd al-Adha</b> : 27 Mai 2026</div>""", unsafe_allow_html=True)
         st.markdown("---"); share_zone(); st.stop()
 
-    # HOME SCANNER
+    # HOME SCANNER GRAPHIQUE
     scans_used=user['scans']-user.get('bonus_scans',0)
     if not user['is_vip'] and scans_used>=5:
-        st.error("🚫 5 essais gratuits utilises")
+        st.markdown("""<div style="background:linear-gradient(135deg,#ff4444,#cc0000); padding:20px; border-radius:16px; text-align:center; color:white"><div style="font-size:50px">🚫</div><div style="font-weight:bold; font-size:18px">5 essais gratuits utilisés</div></div>""", unsafe_allow_html=True)
         if st.button("📺 PUB 15s = +1 SCAN", use_container_width=True):
             st.session_state.ad_watching=True; st.session_state.ad_start_time=time.time(); st.rerun()
         st.link_button("💎 VIP 1500F ILLIMITE", WAVE_LINK, type="primary", use_container_width=True)
@@ -281,35 +270,56 @@ if menu=="Home":
                 users[user_email]['bonus_scans']=users[user_email].get('bonus_scans',0)+1; save_json(USERS_FILE,users); st.session_state.ad_watching=False; st.balloons(); st.success("+1 SCAN!"); st.rerun()
         st.stop()
 
-    st.markdown("### 📸 Scanner Halal")
+    st.markdown("""
+    <div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:20px; text-align:center; color:white; box-shadow:0 8px 20px rgba(0,0,0,0.2)">
+        <div style="font-size:60px">📸</div>
+        <div style="font-weight:900; font-size:22px; letter-spacing:1px">SCANNER HALAL</div>
+        <div style="font-size:12px; opacity:0.8; margin-top:4px">Vérifie ton aliment en 2 secondes</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
     c1,c2=st.columns(2)
     with c1:
-        if st.button("📷 CAMERA", type="primary", use_container_width=True): st.session_state.scan_mode="camera"; st.rerun()
+        st.markdown("""<div style="background:white; border-radius:18px; padding:18px; text-align:center; border:2px solid #e0e7ff; box-shadow:0 4px 12px rgba(0,0,0,0.06)"><div style="font-size:55px">📷</div><div style="font-weight:bold; font-size:14px; color:#0a2a6b">CAMÉRA</div><div style="font-size:10px; color:gray">Prendre photo</div></div>""", unsafe_allow_html=True)
+        if st.button("📷 CAMERA", type="primary", use_container_width=True, key="btn_cam_graph"):
+            st.session_state.scan_mode="camera"; st.rerun()
     with c2:
-        if st.button("🖼️ UPLOAD", type="primary", use_container_width=True): st.session_state.scan_mode="upload"; st.rerun()
+        st.markdown("""<div style="background:white; border-radius:18px; padding:18px; text-align:center; border:2px solid #e0e7ff; box-shadow:0 4px 12px rgba(0,0,0,0.06)"><div style="font-size:55px">🖼️</div><div style="font-weight:bold; font-size:14px; color:#0a2a6b">UPLOAD</div><div style="font-size:10px; color:gray">Galerie</div></div>""", unsafe_allow_html=True)
+        if st.button("🖼️ UPLOAD", type="primary", use_container_width=True, key="btn_upload_graph"):
+            st.session_state.scan_mode="upload"; st.rerun()
+
     photo=None
     if st.session_state.scan_mode=="camera":
+        st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
         cam=st.camera_input("Prends photo", key="camera_input", label_visibility="collapsed")
         if cam: photo=cam
     elif st.session_state.scan_mode=="upload":
+        st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
         up=st.file_uploader("Choisis photo", type=['jpg','png','jpeg','webp'], key="uploader", label_visibility="collapsed")
         if up: photo=up
+
     if photo:
-        st.image(photo, caption="Photo ajoutee", use_container_width=True)
-        if st.button("✅ LANCER LE SCAN HALAL", type="primary", use_container_width=True):
+        st.image(photo, use_container_width=True)
+        st.markdown("""<div style="background:linear-gradient(90deg,#00a651,#00c853); border-radius:14px; padding:3px; margin-top:10px"><div style="background:white; border-radius:11px; padding:2px">""", unsafe_allow_html=True)
+        if st.button("✅ LANCER LE SCAN HALAL", type="primary", use_container_width=True, key="btn_scan_graph"):
             with st.spinner("Analyse..."):
                 time.sleep(2)
                 if not user['is_vip']: users[user_email]['scans']+=1
                 result=random.choice(["HALAL 100% Halal","HARAM Haram detecte","DOUTEUX Verifier"])
                 color="green" if "HALAL" in result else "red" if "HARAM" in result else "orange"
-                st.markdown(f"<div class='card' style='border-left:8px solid {color}'><h2 style='color:{color}'>{result}</h2></div>", unsafe_allow_html=True)
+                icon="✅" if "HALAL" in result else "❌" if "HARAM" in result else "⚠️"
+                st.markdown(f"""<div style="background:white; border-radius:20px; padding:20px; text-align:center; border:3px solid {color}; margin-top:10px"><div style="font-size:60px">{icon}</div><div style="font-size:22px; font-weight:900; color:{color}">{result}</div></div>""", unsafe_allow_html=True)
                 users[user_email]['history'].append({'date':datetime.now().strftime("%d/%m/%Y %H:%M"),'result':result})
                 save_json(USERS_FILE,users); st.balloons(); st.session_state.scan_mode=None
+        st.markdown("</div></div></div>", unsafe_allow_html=True)
+
+    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+    st.markdown("""<div style="background:white; border-radius:18px; padding:15px; text-align:center; border:2px dashed #0072ff; box-shadow:0 4px 12px rgba(0,0,0,0.05)"><div style="font-size:40px">🚀</div><div style="font-weight:bold; color:#0a2a6b">Invite tes amis</div><div style="font-size:11px; color:gray">Partage l'app et gagne du hasanat</div></div>""", unsafe_allow_html=True)
     share_zone()
 
 elif menu=="Coran":
-    show_back_button() if st.session_state.bottom_nav!="Home" else None
-    if st.button("⬅️ Home", key="back_coran"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️", key="back_coran"): st.session_state.bottom_nav="Home"; st.rerun()
     st.title("📖 Coran - 114 Sourates")
     st.markdown("<p style='color:green; font-weight:bold'>GRATUIT - Acces libre</p>", unsafe_allow_html=True)
     for s in SOURATES_114:
@@ -318,7 +328,7 @@ elif menu=="Coran":
 
 elif menu in ["Aliments","Hadiths","Douas"]:
     if not user.get('is_vip'):
-        st.markdown(f"""<div class="card-vip"><h2 style="color:gold;">{menu} - VIP Seulement</h2><p>Active VIP 1500F pour debloquer</p></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-vip"><h2 style="color:gold;">{menu} - VIP Seulement</h2></div>""", unsafe_allow_html=True)
         st.link_button("PAYER 1500F WAVE", WAVE_LINK, type="primary", use_container_width=True)
         if st.button("J'ai paye - Activer VIP", key=f"vip_{menu}"):
             users[user_email]['is_vip']=True; save_json(USERS_FILE,users); st.balloons(); st.rerun()
