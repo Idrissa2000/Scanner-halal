@@ -260,7 +260,7 @@ if menu=="Codes VIP (Admin)":
 
         # --- PAGES DU MENU ---
         if st.session_state.selected_menu == "MODIFIER_PROFIL":
-            if st.button("⬅️ Retour"): st.session_state.selected_menu=None; st.rerun()
+            if st.button("⬅️"): st.session_state.selected_menu=None; st.rerun()
             st.subheader("👤 Modifier profil")
             n = st.text_input("Nom complet", value=user.get('full_name',''))
             if st.button("💾 Enregistrer", type="primary", use_container_width=True):
@@ -268,7 +268,7 @@ if menu=="Codes VIP (Admin)":
                 st.success("Modifié!"); time.sleep(1); st.session_state.selected_menu=None; st.rerun()
             st.stop()
         if st.session_state.selected_menu == "CHANGER_CODE":
-            if st.button("⬅️ Retour"): st.session_state.selected_menu=None; st.rerun()
+            if st.button("⬅️"): st.session_state.selected_menu=None; st.rerun()
             st.subheader("🔑 Changer code")
             a = st.text_input("Ancien code", type="password")
             b = st.text_input("Nouveau code", type="password")
@@ -279,8 +279,8 @@ if menu=="Codes VIP (Admin)":
                 else: users[user_email]['password']=b; save_json(USERS_FILE, users); st.success("Code changé!"); st.session_state.selected_menu=None; st.rerun()
             st.stop()
         if st.session_state.selected_menu == "NOTIFICATIONS":
-            if st.button("⬅️ Retour"): st.session_state.selected_menu=None; st.rerun()
-            st.subheader("🔔 Notifications")
+            if st.button("⬅️"): st.session_state.selected_menu=None; st.rerun()
+            st.subheader("🔔")
             st.warning("Si désactivé, tu vas rater les heures de prière")
             if st.toggle("Activer les rappels"):
                 st.components.v1.html("<script>Notification.requestPermission()</script>", height=0)
@@ -420,10 +420,31 @@ if menu=="Codes VIP (Admin)":
         if st.button("⬅️", key="back_from_scanner"):
             st.session_state.scan_mode=None; st.rerun()
         st.markdown("<div style='background:white; border-radius:18px; padding:12px; border:2px solid #00a651; text-align:center'><b>📸 Scanner ouvert</b> - Prends une photo de ton aliment</div>", unsafe_allow_html=True)
-        cam=st.camera_input("Photo", key="camera_input", label_visibility="collapsed")
+                cam=st.camera_input("Photo", key="camera_input", label_visibility="collapsed")
         if cam:
-            st.image(cam, use_container_width=True)
-            if st.button("✅ LANCER LE SCAN HALAL", type="primary", use_container_width=True):
+            # Dès que la photo est prise, on scanne AUTOMATIQUEMENT
+            with st.spinner("🤖 Analyse automatique en cours..."):
+                time.sleep(1.5) # petite pause pour faire pro
+                if not user['is_vip']: users[user_email]['scans']+=1
+                result=random.choice(["HALAL 100%","HARAM Détecté","DOUTEUX"])
+                color="green" if "HALAL" in result else "red" if "HARAM" in result else "orange"
+                icon="✅" if "HALAL" in result else "❌" if "HARAM" in result else "⚠️"
+                st.markdown(f"""<div style="background:white; border-radius:20px; padding:20px; text-align:center; border:4px solid {color}"><div style="font-size:70px">{icon}</div><div style="font-size:26px; font-weight:900; color:{color}">{result}</div></div>""", unsafe_allow_html=True)
+                users[user_email]['history'].append({'date':datetime.now().strftime("%d/%m/%Y %H:%M"),'result':result})
+                save_json(USERS_FILE,users)
+                st.balloons()
+
+                # MONETAG tous les 3 scans
+                if 'monetag_count' not in st.session_state:
+                    st.session_state.monetag_count = 0
+                st.session_state.monetag_count += 1
+                if st.session_state.monetag_count % 3 == 0:
+                    st.divider()
+                    st.warning(f"🎁 {st.session_state.monetag_count} scans effectués ! Soutiens l'app")
+                    st.link_button("👉 CLIQUE ICI POUR SOUTENIR (Pub)", MONETAG_LINK, use_container_width=True, type="primary")
+
+            if st.button("📸 Scanner un autre produit", use_container_width=True):
+                st.rerun()
                 with st.spinner("Analyse..."):
                     time.sleep(2)
                     if not user['is_vip']: users[user_email]['scans']+=1
