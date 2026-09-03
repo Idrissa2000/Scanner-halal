@@ -3,6 +3,7 @@ import json, os, random, re, base64, calendar, time
 from datetime import datetime, date
 
 WAVE_LINK = "https://pay.wave.com/m/M_ci_bqKBEWPbP0OO/c/ci/?amount=1500"
+MONETAG_LINK = "https://omg10.com/4/11717935"  # <-- AJOUTE CETTE LIGNE
 APP_LINK = "https://scanner-halal.streamlit.app"
 USERS_FILE = "users.json"
 VIP_CODES_FILE = "vip_codes.json"
@@ -370,8 +371,18 @@ if menu=="Home":
                     color="green" if "HALAL" in result else "red" if "HARAM" in result else "orange"
                     icon="✅" if "HALAL" in result else "❌" if "HARAM" in result else "⚠️"
                     st.markdown(f"""<div style="background:white; border-radius:20px; padding:20px; text-align:center; border:4px solid {color}"><div style="font-size:70px">{icon}</div><div style="font-size:26px; font-weight:900; color:{color}">{result}</div></div>""", unsafe_allow_html=True)
-                    users[user_email]['history'].append({'date':datetime.now().strftime("%d/%m/%Y %H:%M"),'result':result})
+                                       users[user_email]['history'].append({'date':datetime.now().strftime("%d/%m/%Y %H:%M"),'result':result})
                     save_json(USERS_FILE,users); st.balloons()
+
+                    # --- MONETAG : GAGNER ARGENT TOUS LES 3 SCANS ---
+                    if 'monetag_count' not in st.session_state:
+                        st.session_state.monetag_count = 0
+                    st.session_state.monetag_count += 1
+
+                    if st.session_state.monetag_count % 3 == 0:
+                        st.divider()
+                        st.warning(f"🎁 {st.session_state.monetag_count} scans effectués ! Soutiens l'app pour la garder gratuite")
+                        st.link_button("👉 CLIQUE ICI POUR SOUTENIR (Pub)", MONETAG_LINK, use_container_width=True, type="primary")
                     if st.button("⬅️ Fermer résultat et revenir", key="close_result"):
                         st.session_state.scan_mode=None; st.rerun()
 
