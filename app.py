@@ -227,16 +227,76 @@ if menu=="Codes VIP (Admin)":
         st.success("5 codes générés"); st.rerun()
     st.stop()
 
-if menu=="Home":
-    c1,c2,c3,c4=st.columns(4)
-    with c1:
-        if st.button("🏠 Home", use_container_width=True): st.session_state.bottom_nav="Home"; st.rerun()
-    with c2:
-        if st.button("📚 SAVOIR", use_container_width=True): st.session_state.bottom_nav="SAVOIR"; st.rerun()
-    with c3:
-        if st.button("🕋 Qibla", use_container_width=True): st.session_state.bottom_nav="Qibla"; st.rerun()
-    with c4:
-        if st.button("📅 Cal.", use_container_width=True): st.session_state.bottom_nav="Calendrier"; st.rerun()
+    if menu=="Home":
+        user = users[user_email]
+
+        # --- HEADER AVEC 3 POINTS ---
+        col_title, col_menu = st.columns([0.85, 0.15])
+        with col_title:
+            st.markdown(f"### Salam {user.get('full_name','').split(' ')[0]} 👋")
+        with col_menu:
+            with st.popover("⋮"):
+                if st.button("👤 Profil", use_container_width=True, key="m1"):
+                    st.session_state.selected_menu = "MODIFIER_PROFIL"; st.rerun()
+                if st.button("🔑 Code", use_container_width=True, key="m2"):
+                    st.session_state.selected_menu = "CHANGER_CODE"; st.rerun()
+                if st.button("🔔 Notifs", use_container_width=True, key="m3"):
+                    st.session_state.selected_menu = "NOTIFICATIONS"; st.rerun()
+                if st.button("🚪 Quitter", use_container_width=True, key="m4"):
+                    for k in list(st.session_state.keys()): del st.session_state[k]
+                    st.rerun()
+
+        # RAPPEL NOTIFICATION
+        st.components.v1.html("""
+        <script>
+        if (Notification && Notification.permission!= "granted") {
+           var b = document.createElement('div');
+           b.innerHTML = "<div style='background:#fff3cd;border-left:5px solid #ffc107;padding:10px;border-radius:10px;font-size:13px;font-weight:700'>🔔 Notifications désactivées - Active pour ne pas rater la prière</div>";
+           document.body.prepend(b);
+           setTimeout(()=>{Notification.requestPermission()}, 2000);
+        }
+        </script>
+        """, height=0)
+
+        # --- PAGES DU MENU ---
+        if st.session_state.selected_menu == "MODIFIER_PROFIL":
+            if st.button("⬅️ Retour"): st.session_state.selected_menu=None; st.rerun()
+            st.subheader("👤 Modifier profil")
+            n = st.text_input("Nom complet", value=user.get('full_name',''))
+            if st.button("💾 Enregistrer", type="primary", use_container_width=True):
+                users[user_email]['full_name']=n; save_json(USERS_FILE, users)
+                st.success("Modifié!"); time.sleep(1); st.session_state.selected_menu=None; st.rerun()
+            st.stop()
+        if st.session_state.selected_menu == "CHANGER_CODE":
+            if st.button("⬅️ Retour"): st.session_state.selected_menu=None; st.rerun()
+            st.subheader("🔑 Changer code")
+            a = st.text_input("Ancien code", type="password")
+            b = st.text_input("Nouveau code", type="password")
+            c = st.text_input("Confirmer", type="password")
+            if st.button("🔒 Changer", type="primary", use_container_width=True):
+                if users[user_email]['password']!=a: st.error("Ancien code faux")
+                elif b!=c: st.error("Codes différents")
+                else: users[user_email]['password']=b; save_json(USERS_FILE, users); st.success("Code changé!"); st.session_state.selected_menu=None; st.rerun()
+            st.stop()
+        if st.session_state.selected_menu == "NOTIFICATIONS":
+            if st.button("⬅️ Retour"): st.session_state.selected_menu=None; st.rerun()
+            st.subheader("🔔 Notifications")
+            st.warning("Si désactivé, tu vas rater les heures de prière")
+            if st.toggle("Activer les rappels"):
+                st.components.v1.html("<script>Notification.requestPermission()</script>", height=0)
+                st.success("Activé!")
+            st.stop()
+
+        # --- TON ANCIEN CODE HOME CONTINUE ICI ---
+        c1,c2,c3,c4=st.columns(4)
+        with c1:
+            if st.button("🏠 Home", use_container_width=True, type="primary"): st.session_state.bottom_nav="Home"; st.rerun()
+        with c2:
+            if st.button("📚 SAVOIR", use_container_width=True): st.session_state.bottom_nav="SAVOIR"; st.rerun()
+        with c3:
+            if st.button("🕋 Qibla", use_container_width=True): st.session_state.bottom_nav="Qibla"; st.rerun()
+        with c4:
+            if st.button("📅 Cal.", use_container_width=True): st.session_state.bottom_nav="Calendrier"; st.rerun()
 
     if st.session_state.bottom_nav in ["VIP_ALIMENTS","VIP_DOUAS","VIP_HADITHS"]:
         if st.button("⬅️"): st.session_state.bottom_nav="Home"; st.rerun()
