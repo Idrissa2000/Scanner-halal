@@ -121,7 +121,7 @@ for k in ['user','page','reset_code','scan_mode','bottom_nav','selected_menu','a
 
 if st.session_state.page=="auth":
     st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:25px; text-align:center; color:white"><div style="font-size:70px">🕌</div><div style="font-size:24px; font-weight:900">SCANNER HALAL</div></div>""", unsafe_allow_html=True)
-    t1,t2,t3=st.tabs(["Connexion","Inscription","Oublié"])
+    t1,t2,t3=st.tabs(["Connexion","Inscription","Code oublié"])
     with t1:
         e=st.text_input("Email", key="email_connexion").strip()
         p=st.text_input("Mot de passe",type="password", key="pwd_connexion")
