@@ -371,7 +371,7 @@ if menu=="Home":
                     color="green" if "HALAL" in result else "red" if "HARAM" in result else "orange"
                     icon="✅" if "HALAL" in result else "❌" if "HARAM" in result else "⚠️"
                     st.markdown(f"""<div style="background:white; border-radius:20px; padding:20px; text-align:center; border:4px solid {color}"><div style="font-size:70px">{icon}</div><div style="font-size:26px; font-weight:900; color:{color}">{result}</div></div>""", unsafe_allow_html=True)
-                                       users[user_email]['history'].append({'date':datetime.now().strftime("%d/%m/%Y %H:%M"),'result':result})
+                    users[user_email]['history'].append({'date':datetime.now().strftime("%d/%m/%Y %H:%M"),'result':result})
                     save_json(USERS_FILE,users); st.balloons()
 
                     # --- MONETAG : GAGNER ARGENT TOUS LES 3 SCANS ---
