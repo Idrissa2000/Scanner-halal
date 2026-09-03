@@ -347,7 +347,7 @@ if menu=="Home":
     st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📸</div><div style="font-weight:900">SCANNER HALAL</div><div style="font-size:11px; opacity:0.8">Vérifie en 2 secondes</div></div>""", unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 
-    label_scanner = "❌\n\nFERMER SCANNER\n\nClique pour fermer" if st.session_state.scan_mode=="camera" else "📷\n\nSCANNER\n\nClique pour ouvrir"
+    label_scanner = "❌\n\nFERMER SCANNER\n\nFermer" if st.session_state.scan_mode=="camera" else "📷\n\nSCANNER\n\nOuvrir"
     if st.button(label_scanner, use_container_width=True, key="scanner_toggle"):
         if st.session_state.scan_mode=="camera":
             st.session_state.scan_mode=None
@@ -356,7 +356,7 @@ if menu=="Home":
         st.rerun()
 
     if st.session_state.scan_mode=="camera":
-        if st.button("⬅️ Revenir à la page précédente", key="back_from_scanner"):
+        if st.button("⬅️", key="back_from_scanner"):
             st.session_state.scan_mode=None; st.rerun()
         st.markdown("<div style='background:white; border-radius:18px; padding:12px; border:2px solid #00a651; text-align:center'><b>📸 Scanner ouvert</b> - Prends une photo de ton aliment</div>", unsafe_allow_html=True)
         cam=st.camera_input("Photo", key="camera_input", label_visibility="collapsed")
@@ -401,7 +401,7 @@ elif menu=="Coran":
         s_num = st.session_state.selected_sourate
         s_nom = SOURATES_NOMS[s_num-1]
         audio_url = f"{base_url}{s_num}.mp3"
-        if st.button("⬅️ Retour liste sourates", key="back_sourate_list"):
+        if st.button("⬅️", key="back_sourate_list"):
             st.session_state.selected_sourate = None; st.rerun()
         st.markdown(f"""
         <div style="background:white; border-radius:20px; padding:20px; border:3px solid #00a651; text-align:center">
@@ -413,7 +413,7 @@ elif menu=="Coran":
         st.audio(audio_url, format="audio/mp3")
         col1, col2 = st.columns(2)
         with col1:
-            st.link_button("📥 Télécharger MP3 Gratuit", audio_url, use_container_width=True)
+            st.link_button("📥 Télécharger MP3", audio_url, use_container_width=True)
         with col2:
             st.link_button("🌐 Lire texte complet", f"https://quran.com/{s_num}", use_container_width=True)
         st.stop()
@@ -443,7 +443,7 @@ elif menu=="Hadiths":
     st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📜</div><div style="font-weight:900">40 HADITHS NAWAWI</div><div style="color:gold">Clique icône pour lire</div></div>""", unsafe_allow_html=True)
     if st.session_state.selected_hadith:
         h = st.session_state.selected_hadith
-        if st.button("⬅️ Retour liste"):
+        if st.button("⬅️"):
             st.session_state.selected_hadith=None; st.rerun()
         st.markdown(f"""
         <div style="background:white; border-radius:18px; padding:20px; border:3px solid gold">
@@ -471,7 +471,7 @@ elif menu=="Aliments":
     st.markdown(f"""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">🍖</div><div style="font-weight:900">ALIMENTS HALAL / HARAM</div><div style="color:gold">{len(ALIMENTS_DATA)} aliments</div></div>""", unsafe_allow_html=True)
     if st.session_state.selected_aliment:
         a = st.session_state.selected_aliment
-        if st.button("⬅️ Retour liste"):
+        if st.button("⬅️"):
             st.session_state.selected_aliment=None; st.rerun()
         color = "#00a651" if a['statut']=="HALAL" else "#cc0000"
         st.markdown(f"""
@@ -483,7 +483,7 @@ elif menu=="Aliments":
         </div>
         """, unsafe_allow_html=True)
         st.stop()
-    search = st.text_input("🔍 Cherche aliment", placeholder="Ex: porc, poulet...")
+    search = st.text_input("🔍", placeholder="Ex: porc, poulet...")
     for a in ALIMENTS_DATA:
         if search.lower() in a['nom'].lower() or not search:
             col1,col2 = st.columns([4,1])
