@@ -208,7 +208,7 @@ with st.expander("✏️ Modifier photo / couverture / nom (clique ici)"):
             users[user_email]['nom']=new_name.strip(); users[user_email]['full_name']=new_name.strip(); save_json(USERS_FILE,users); st.success("Nom changé"); st.rerun()
 
 with st.sidebar:
-    menu=st.radio("NAVIGATION", ["Home","Aliments","Coran","Hadiths","Douas","Parametres","Codes VIP (Admin)"], label_visibility="collapsed")
+    menu=st.radio("NAVIGATION", ["Home","Aliments","Coran","Hadiths","Douas","Parametres","Jeux","Codes VIP (Admin)"], label_visibility="collapsed")
     if st.button("🚪 Déconnexion", use_container_width=True):
         st.session_state.user=None; st.session_state.page="auth"; st.rerun()
 
@@ -227,88 +227,27 @@ if menu=="Codes VIP (Admin)":
             vip_codes[new_code] = {"used": False, "used_by": None}
         save_json(VIP_CODES_FILE, vip_codes)
         st.success("5 codes générés"); st.rerun()
-    if st.button("⬅️"):
+    if st.button("⬅️ Retour Home"):
         st.session_state.bottom_nav="Home"; st.rerun()
     st.stop()
 
 if menu=="Home":
-       # --- 3 BOUTONS PRINCIPAUX COTE A COTE DU SCANNER ---
-    col_scan, col_savoir, col_jeux = st.columns(3)
+    # --- HEADER AVEC 3 POINTS EN HAUT A DROITE STYLE WHATSAPP ---
+    col_title, col_menu = st.columns([0.85, 0.15])
+    with col_title:
+        st.markdown(f"### Salam {user.get('full_name','').split(' ')[0]} 👋")
+    with col_menu:
+        with st.popover("⋮"):
+            if st.button("👤 Profil", use_container_width=True, key="m1"):
+                st.session_state.bottom_nav="Home"; st.rerun()
+            if st.button("🔑 Code", use_container_width=True, key="m2"):
+                st.session_state.bottom_nav="CHANGE_CODE"; st.rerun()
+            if st.button("🔔 Notifs", use_container_width=True, key="m3"):
+                st.session_state.bottom_nav="NOTIFS"; st.rerun()
+            if st.button("🚪 Quitter", use_container_width=True, key="m4"):
+                for k in list(st.session_state.keys()): del st.session_state[k]
+                st.rerun()
 
-    with col_scan:
-        label_scanner = "❌\nFERMER" if st.session_state.scan_mode=="camera" else "📷\nSCANNER\nPRO"
-        if st.button(label_scanner, use_container_width=True, key="scanner_toggle"):
-            st.session_state.scan_mode = None if st.session_state.scan_mode=="camera" else "camera"
-            st.rerun()
-
-    with col_savoir:
-        if st.button("📚\nSAVOIR\nCoran, Douas\nHadiths, Alim.", use_container_width=True, key="quick_savoir"):
-            st.session_state.bottom_nav="SAVOIR"; st.rerun()
-
-    with col_jeux:
-        if st.button("🎮\nJEUX\nQuiz", use_container_width=True, key="quick_jeux_top"):
-            st.session_state.selected_menu="Jeux"; st.session_state.bottom_nav="Home"; st.rerun()
-
-    # --- SCANNER PRO LIVE + PHOTO AUTO ---
-    if st.session_state.scan_mode=="camera":
-        barcode_html = """
-        <div id="reader" style="width:100%; border-radius:18px; border:3px solid #0a2a6b"></div>
-        <div id="result-pro" style="margin-top:10px; padding:15px; background:#e8f5e9; border-radius:12px; text-align:center; font-weight:900; display:none"></div>
-        <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-        <script>
-        function onScanSuccess(decodedText) {
-            let resDiv = document.getElementById('result-pro');
-            resDiv.style.display='block';
-            let isHalal = Math.random() > 0.3;
-            let status = isHalal? "HALAL 100% ✅" : "HARAM Détecté ❌";
-            let color = isHalal? "#00a651" : "#cc0000";
-            resDiv.innerHTML = `<div style="font-size:14px">Code: <b>${decodedText}</b></div><div style="font-size:26px; color:${color}; margin-top:8px">${status}</div>`;
-            if(navigator.vibrate) navigator.vibrate(200);
-        }
-        let scanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: {width: 250, height: 150}});
-        scanner.render(onScanSuccess);
-        </script>
-        """
-        st.components.v1.html(barcode_html, height=520)
-        st.markdown("**OU photo auto :**")
-        cam=st.camera_input("Photo", key="camera_input", label_visibility="collapsed")
-        if cam:
-            with st.spinner("🤖 Analyse automatique..."):
-                time.sleep(1.5)
-                result=random.choice(["HALAL 100%","HARAM Détecté","DOUTEUX"])
-                color="green" if "HALAL" in result else "red" if "HARAM" in result else "orange"
-                icon="✅" if "HALAL" in result else "❌" if "HARAM" in result else "⚠️"
-                st.markdown(f"""<div style="background:white; border-radius:20px; padding:20px; text-align:center; border:4px solid {color}"><div style="font-size:70px">{icon}</div><div style="font-size:26px; font-weight:900; color:{color}">{result}</div></div>""", unsafe_allow_html=True)
-                users[user_email]['history'].append({'date':datetime.now().strftime("%d/%m/%Y %H:%M"),'result':result})
-                save_json(USERS_FILE,users)
-                st.balloons()
-                st.session_state.monetag_count+=1
-                if st.session_state.monetag_count % 3 == 0:
-                    st.warning(f"🎁 {st.session_state.monetag_count} scans! Soutiens l'app")
-                    st.link_button("👉 CLIQUE ICI POUR SOUTENIR (Pub)", MONETAG_LINK, use_container_width=True, type="primary")
-            if st.button("📸 Scanner un autre", use_container_width=True): st.rerun()
-
-    # --- PAGE SAVOIR AVEC VIP ---
-    if st.session_state.bottom_nav=="SAVOIR":
-        if st.button("⬅️", key="back_savoir"): st.session_state.bottom_nav="Home"; st.rerun()
-        st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📚</div><div style="font-weight:900">SAVOIR ISLAMIQUE</div></div>""", unsafe_allow_html=True)
-        c1,c2=st.columns(2)
-        with c1:
-            if st.button("📖\nCORAN\n114 Sourates\nGRATUIT", use_container_width=True, key="open_coran"):
-                st.session_state.selected_menu="Coran"; st.session_state.bottom_nav="Home"; st.rerun()
-            if st.button("📜\nHADITHS\n40 Hadiths\nVIP 🔒", use_container_width=True, key="open_hadiths"):
-                if user.get('is_vip'): st.session_state.selected_menu="Hadiths"; st.session_state.bottom_nav="Home"; st.rerun()
-                else: st.session_state.bottom_nav="VIP_HADITHS"; st.rerun()
-        with c2:
-            if st.button("🍖\nALIMENTS\nHalal/Haram\nVIP 🔒", use_container_width=True, key="open_aliments"):
-                if user.get('is_vip'): st.session_state.selected_menu="Aliments"; st.session_state.bottom_nav="Home"; st.rerun()
-                else: st.session_state.bottom_nav="VIP_ALIMENTS"; st.rerun()
-            if st.button("🤲\nDOUAS\n50 Invocations\nVIP 🔒", use_container_width=True, key="open_douas"):
-                if user.get('is_vip'): st.session_state.selected_menu="Douas"; st.session_state.bottom_nav="Home"; st.rerun()
-                else: st.session_state.bottom_nav="VIP_DOUAS"; st.rerun()
-        st.stop()
-
-    # RAPPEL SI NOTIFICATION NON ACTIVEE
     st.components.v1.html("""
     <div id="notif-check" style="display:none"></div>
     <script>
@@ -324,7 +263,7 @@ if menu=="Home":
     """, height=0)
 
     if st.session_state.bottom_nav=="CHANGE_CODE":
-        if st.button("⬅️", key="back_code"): st.session_state.bottom_nav="Home"; st.rerun()
+        if st.button("⬅️ Retour", key="back_code"): st.session_state.bottom_nav="Home"; st.rerun()
         st.subheader("🔑 Changer code")
         a = st.text_input("Ancien code", type="password", key="old_code")
         b = st.text_input("Nouveau code", type="password", key="new_code1")
@@ -337,8 +276,8 @@ if menu=="Home":
         st.stop()
 
     if st.session_state.bottom_nav=="NOTIFS":
-        if st.button("⬅️", key="back_notif"): st.session_state.bottom_nav="Home"; st.rerun()
-        st.subheader("🔔 Notification")
+        if st.button("⬅️ Retour", key="back_notif"): st.session_state.bottom_nav="Home"; st.rerun()
+        st.subheader("🔔 Notifications")
         st.info("Reçois une alerte à chaque heure de prière")
         enable_notif = st.toggle("Activer les notifications de prière", value=False)
         if enable_notif:
@@ -349,7 +288,7 @@ if menu=="Home":
         st.stop()
 
     if st.session_state.bottom_nav in ["VIP_ALIMENTS","VIP_DOUAS","VIP_HADITHS"]:
-        if st.button("⬅️"): st.session_state.bottom_nav="Home"; st.rerun()
+        if st.button("⬅️ Retour Home VIP"): st.session_state.bottom_nav="Home"; st.rerun()
         nom=st.session_state.bottom_nav.replace("VIP_","")
         st.markdown(f"""
         <div class="card-vip">
@@ -364,7 +303,7 @@ if menu=="Home":
             <span style="font-size:11px; color:gray">Test: VIP-2026-TEST</span>
         </div>""", unsafe_allow_html=True)
         code_input = st.text_input("🔑 Entre ton CODE VIP", placeholder="VIP-XXXX-XXXX", key="vip_code_input").strip().upper()
-        if st.button("✅ ACTIVER MON VIP", use_container_width=True, type="primary"):
+        if st.button("✅ ACTIVER MON VIP AVEC CODE", use_container_width=True, type="primary"):
             if not code_input:
                 st.error("Entre ton code")
             elif check_vip_code(code_input):
@@ -376,27 +315,6 @@ if menu=="Home":
                 st.session_state.bottom_nav="Home"; st.rerun()
             else:
                 st.error("❌ Code invalide ou déjà utilisé")
-        st.stop()
-
-    if st.session_state.bottom_nav=="SAVOIR":
-        if st.button("⬅️", key="back_savoir"): st.session_state.bottom_nav="Home"; st.rerun()
-        st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📚</div><div style="font-weight:900">SAVOIR ISLAMIQUE</div></div>""", unsafe_allow_html=True)
-        col1,col2=st.columns(2)
-        with col1:
-            if st.button("📖\nCORAN\n114 Sourates\nGRATUIT", use_container_width=True, key="open_coran"):
-                st.session_state.selected_menu="Coran"; st.session_state.bottom_nav="Home"; st.rerun()
-            if st.button("📜\nHADITHS\n40 Hadiths\nVIP 🔒", use_container_width=True, key="open_hadiths"):
-                if user.get('is_vip'): st.session_state.selected_menu="Hadiths"; st.session_state.bottom_nav="Home"; st.rerun()
-                else: st.session_state.bottom_nav="VIP_HADITHS"; st.rerun()
-            if st.button("🎮\nJEUX ISLAMIQUES\nQuiz & Puzzle\nGRATUIT", use_container_width=True, key="open_jeux"):
-                st.session_state.selected_menu="Jeux"; st.session_state.bottom_nav="Home"; st.rerun()
-        with col2:
-            if st.button("🍖\nALIMENTS\nHalal / Haram\nVIP 🔒", use_container_width=True, key="open_aliments"):
-                if user.get('is_vip'): st.session_state.selected_menu="Aliments"; st.session_state.bottom_nav="Home"; st.rerun()
-                else: st.session_state.bottom_nav="VIP_ALIMENTS"; st.rerun()
-            if st.button("🤲\nDOUAS\n50 Invocations\nVIP 🔒", use_container_width=True, key="open_douas"):
-                if user.get('is_vip'): st.session_state.selected_menu="Douas"; st.session_state.bottom_nav="Home"; st.rerun()
-                else: st.session_state.bottom_nav="VIP_DOUAS"; st.rerun()
         st.stop()
 
     if st.session_state.bottom_nav=="Qibla":
@@ -454,17 +372,44 @@ if menu=="Home":
         st.markdown("""<div style="background:white; padding:12px; border-radius:12px; border-left:5px solid #00a651">🌙 <b>Ramadan 1447</b> : 18 Février 2026<br>🎉 <b>Aïd al-Fitr</b> : 20 Mars 2026<br>🕋 <b>Aïd al-Adha</b> : 27 Mai 2026</div>""", unsafe_allow_html=True)
         st.stop()
 
-    # SCANNER PRO - AUTO DETECTION
+    # ===== MODIFICATION PRINCIPALE : 3 BOUTONS COTE A COTE =====
     st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📸</div><div style="font-weight:900">SCANNER HALAL PRO</div><div style="font-size:11px; opacity:0.8">Pointe le code-barre, détection auto</div></div>""", unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 
-    label_scanner = "❌ FERMER SCANNER" if st.session_state.scan_mode=="camera" else "📷 OUVRIR SCANNER PRO"
-    if st.button(label_scanner, use_container_width=True, key="scanner_toggle"):
-        st.session_state.scan_mode = None if st.session_state.scan_mode=="camera" else "camera"
-        st.rerun()
+    col_scan, col_savoir, col_jeux = st.columns(3)
+    with col_scan:
+        label_scanner = "❌\nFERMER" if st.session_state.scan_mode=="camera" else "📷\nSCANNER\nPRO"
+        if st.button(label_scanner, use_container_width=True, key="scanner_toggle"):
+            st.session_state.scan_mode = None if st.session_state.scan_mode=="camera" else "camera"
+            st.rerun()
+    with col_savoir:
+        if st.button("📚\nSAVOIR", use_container_width=True, key="quick_savoir"):
+            st.session_state.bottom_nav="SAVOIR"; st.rerun()
+    with col_jeux:
+        if st.button("🎮\nJEUX", use_container_width=True, key="quick_jeux_top"):
+            st.session_state.selected_menu="Jeux"; st.rerun()
+
+    # PAGE SAVOIR AVEC VIP
+    if st.session_state.bottom_nav=="SAVOIR":
+        if st.button("⬅️ Retour", key="back_savoir"): st.session_state.bottom_nav="Home"; st.rerun()
+        st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📚</div><div style="font-weight:900">SAVOIR ISLAMIQUE</div><div style="font-size:11px">Coran gratuit, reste VIP</div></div>""", unsafe_allow_html=True)
+        c1,c2=st.columns(2)
+        with c1:
+            if st.button("📖\nCORAN\n114 Sourates\nGRATUIT", use_container_width=True, key="open_coran"):
+                st.session_state.selected_menu="Coran"; st.session_state.bottom_nav="Home"; st.rerun()
+            if st.button("📜\nHADITHS\n40 Hadiths\nVIP 🔒", use_container_width=True, key="open_hadiths"):
+                if user.get('is_vip'): st.session_state.selected_menu="Hadiths"; st.session_state.bottom_nav="Home"; st.rerun()
+                else: st.session_state.bottom_nav="VIP_HADITHS"; st.rerun()
+        with c2:
+            if st.button("🍖\nALIMENTS\nHalal / Haram\nVIP 🔒", use_container_width=True, key="open_aliments"):
+                if user.get('is_vip'): st.session_state.selected_menu="Aliments"; st.session_state.bottom_nav="Home"; st.rerun()
+                else: st.session_state.bottom_nav="VIP_ALIMENTS"; st.rerun()
+            if st.button("🤲\nDOUAS\n50 Invocations\nVIP 🔒", use_container_width=True, key="open_douas"):
+                if user.get('is_vip'): st.session_state.selected_menu="Douas"; st.session_state.bottom_nav="Home"; st.rerun()
+                else: st.session_state.bottom_nav="VIP_DOUAS"; st.rerun()
+        st.stop()
 
     if st.session_state.scan_mode=="camera":
-        # MODE PRO CODE-BARRE LIVE
         barcode_html = """
         <div id="reader" style="width:100%; border-radius:18px; overflow:hidden; border:3px solid #0a2a6b"></div>
         <div id="result-pro" style="margin-top:10px; padding:15px; background:#e8f5e9; border-radius:12px; text-align:center; font-weight:900; display:none"></div>
@@ -484,7 +429,6 @@ if menu=="Home":
         </script>
         """
         st.components.v1.html(barcode_html, height=520)
-
         st.divider()
         st.markdown("**OU photo classique (auto-scan) :**")
         cam=st.camera_input("Photo", key="camera_input", label_visibility="collapsed")
@@ -516,13 +460,11 @@ if menu=="Home":
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
     if st.button("🚀\n\nInvite tes amis\nPartage et gagne du hasanat", use_container_width=True, key="invite_graph"):
         st.markdown(f"<a href='https://wa.me/?text=Decouvre Scanner Halal {APP_LINK}' target='_blank' style='display:block; background:#00a651; color:white; text-align:center; padding:12px; border-radius:12px; text-decoration:none; font-weight:900'>📤 PARTAGER SUR WHATSAPP</a>", unsafe_allow_html=True)
-
-    # SEULEMENT VIP BUTTON, PLUS DE PUB MANUELLE
     if not user.get('is_vip'):
         st.link_button("💎 Passer VIP 1500F ILLIMITÉ", WAVE_LINK, type="primary", use_container_width=True)
 
 elif menu=="Coran":
-    if st.button("⬅️", key="back_coran"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️ Retour Coran", key="back_coran"): st.session_state.bottom_nav="Home"; st.rerun()
     st.markdown("""<div style="background:linear-gradient(135deg,#00a651,#00c853); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📖</div><div style="font-weight:900; font-size:20px">CORAN 114 - AUDIO GRATUIT</div></div>""", unsafe_allow_html=True)
     recitateur_nom = st.selectbox("🎙️ Choisis ton récitateur", list(RECITATEURS.keys()), key="recitateur")
     base_url = RECITATEURS[recitateur_nom]
@@ -530,7 +472,7 @@ elif menu=="Coran":
         s_num = st.session_state.selected_sourate
         s_nom = SOURATES_NOMS[s_num-1]
         audio_url = f"{base_url}{s_num}.mp3"
-        if st.button("⬅️", key="back_sourate_list"):
+        if st.button("⬅️ Retour liste", key="back_sourate_list"):
             st.session_state.selected_sourate = None; st.rerun()
         st.markdown(f"""<div style="background:white; border-radius:20px; padding:20px; border:3px solid #00a651; text-align:center"><div style="font-size:60px">📖</div><div style="font-weight:900; font-size:22px; color:#0a2a6b">{s_num}. {s_nom}</div></div>""", unsafe_allow_html=True)
         st.audio(audio_url, format="audio/mp3")
@@ -552,7 +494,7 @@ elif menu=="Hadiths":
         st.markdown("""<div class="card-vip"><div style="font-size:70px">🔒</div><div style="font-weight:900; color:gold">Hadiths VIP - CODE requis</div></div>""", unsafe_allow_html=True)
         st.link_button("💳 PAYER 1500F POUR CODE", WAVE_LINK, type="primary", use_container_width=True)
         st.stop()
-    if st.button("⬅️", key="back_hadith"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️ Retour Hadiths", key="back_hadith"): st.session_state.bottom_nav="Home"; st.rerun()
     st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📜</div><div style="font-weight:900">40 HADITHS NAWAWI</div></div>""", unsafe_allow_html=True)
     if st.session_state.selected_hadith:
         h = st.session_state.selected_hadith
@@ -572,11 +514,36 @@ elif menu=="Aliments":
         st.markdown("""<div class="card-vip"><div style="font-size:70px">🔒</div><div style="font-weight:900; color:gold">Aliments VIP - CODE requis</div></div>""", unsafe_allow_html=True)
         st.link_button("💳 PAYER 1500F POUR CODE", WAVE_LINK, type="primary", use_container_width=True)
         st.stop()
-    if st.button("⬅️", key="back_alim"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️ Retour Aliments", key="back_alim"): st.session_state.bottom_nav="Home"; st.rerun()
     search = st.text_input("🔍 Cherche aliment", placeholder="Ex: porc, poulet...")
     for a in ALIMENTS_DATA:
         if search.lower() in a['nom'].lower() or not search:
             st.markdown(f"""<div class="card-graph" style="text-align:left; border-left:5px solid {'#00a651' if a['statut']=='HALAL' else '#cc0000'}"><b>{a['icon']} {a['nom']}</b> - {a['statut']}<br><span style="font-size:11px">{a['desc']}</span></div>""", unsafe_allow_html=True)
+
+elif menu=="Douas":
+    if not user.get('is_vip'):
+        st.markdown("""<div class="card-vip"><div style="font-size:70px">🔒</div><div style="font-weight:900; color:gold">Douas VIP - CODE requis</div></div>""", unsafe_allow_html=True)
+        st.link_button("💳 PAYER 1500F POUR CODE", WAVE_LINK, type="primary", use_container_width=True)
+        st.stop()
+    if st.button("⬅️ Retour Douas", key="back_douas"): st.session_state.bottom_nav="Home"; st.rerun()
+    st.title("🤲 50 Douas")
+    st.markdown("<div class='card-graph'>Bismillah - Au nom d'Allah<br>Alhamdulillah - Louange à Allah</div>", unsafe_allow_html=True)
+
+elif menu=="Jeux":
+    if st.button("⬅️ Retour Jeux", key="back_jeux"): st.session_state.bottom_nav="Home"; st.rerun()
+    st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">🎮</div><div style="font-weight:900">JEUX ISLAMIQUES - GRATUIT</div></div>""", unsafe_allow_html=True)
+    q=random.choice(ALIMENTS_DATA)
+    st.markdown(f"<div class='card-graph'><div style='font-size:50px'>{q['icon']}</div><b>{q['nom']}</b><br>Devine HALAL ou HARAM?</div>", unsafe_allow_html=True)
+    c1,c2=st.columns(2)
+    with c1:
+        if st.button("HALAL ✅", use_container_width=True):
+            if q['statut']=="HALAL": st.success("✅ Bravo!"); st.balloons()
+            else: st.error("❌ C'était HARAM")
+    with c2:
+        if st.button("HARAM ❌", use_container_width=True):
+            if q['statut']=="HARAM": st.success("✅ Bravo!"); st.balloons()
+            else: st.error("❌ C'était HALAL")
+    if st.button("🔄 Nouvelle question", use_container_width=True): st.rerun()
 
 elif menu=="Parametres":
     st.markdown(f"""<div style="background:white; border-radius:20px; padding:20px; text-align:center"><div style="font-size:50px">⚙️</div><b>{user.get('nom')}</b><br>{user_email}</div>""", unsafe_allow_html=True)
