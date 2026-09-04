@@ -5,7 +5,7 @@ from PIL import Image
 
 WAVE_LINK = "https://pay.wave.com/m/M_ci_bqKBEWPbP0OO/c/ci/?amount=1500"
 MONETAG_LINK = "https://omg10.com/4/11717935"
-APP_LINK = "https://scanner-halal.streamlit.app"
+APP_LINK = "https://scanner-halal-mbcyfmxur68mw8n9zd72ul.streamlit.app"
 USERS_FILE = "users.json"
 VIP_CODES_FILE = "vip_codes.json"
 BLOCKCHAIN_FILE = "blockchain_history.json"
@@ -15,27 +15,26 @@ MAX_PHOTO_SIZE = int(2.5 * 1024 * 1024)
 os.makedirs("profile_pics", exist_ok=True)
 os.makedirs("static", exist_ok=True)
 
-# Auto-create manifest.json + sw.js pour APK
-if not os.path.exists("static/manifest.json"):
-    manifest = {
-      "name": "Scanner Halal",
-      "short_name": "Halal Scan",
-      "description": "Scanner Halal 2,5 Mo + historique blockchain immuable",
-      "start_url": "/",
-      "display": "standalone",
-      "background_color": "#0a2a6b",
-      "theme_color": "#0a2a6b",
-      "orientation": "portrait",
-      "icons": [
-        {"src": "https://cdn-icons-png.flaticon.com/512/1998/1998707.png","sizes": "192x192","type": "image/png","purpose": "any maskable"},
-        {"src": "https://cdn-icons-png.flaticon.com/512/1998/1998707.png","sizes": "512x512","type": "image/png","purpose": "any maskable"}
-      ]
-    }
-    with open("static/manifest.json","w",encoding="utf-8") as f:
-        json.dump(manifest,f,indent=2)
-if not os.path.exists("static/sw.js"):
-    with open("static/sw.js","w") as f:
-        f.write('const CACHE="halal-v1";self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(["/"])).then(()=>self.skipWaiting()))});self.addEventListener("fetch",e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))});')
+# ====== MANIFEST + SW CORRIGÉ POUR PWABUILDER APK ======
+manifest = {
+  "name": "Scanner Halal Blockchain",
+  "short_name": "Halal Scan",
+  "description": "Scanner Halal 2,5 Mo + historique blockchain immuable",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a2a6b",
+  "theme_color": "#0a2a6b",
+  "orientation": "portrait",
+  "icons": [
+    {"src": "https://cdn-icons-png.flaticon.com/512/3132/3132693.png","sizes": "192x192","type": "image/png","purpose": "any maskable"},
+    {"src": "https://cdn-icons-png.flaticon.com/512/3132/3132693.png","sizes": "512x512","type": "image/png","purpose": "any maskable"}
+  ]
+}
+with open("static/manifest.json","w",encoding="utf-8") as f:
+    json.dump(manifest,f,indent=2)
+
+with open("static/sw.js","w") as f:
+    f.write('self.addEventListener("install", e=>{e.waitUntil(caches.open("halal-v2").then(c=>c.addAll(["/"])))});self.addEventListener("fetch", e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})')
 
 # ================= BLOCKCHAIN =================
 def calculate_hash(index, timestamp, data, previous_hash):
@@ -164,9 +163,9 @@ users=load_json(USERS_FILE,{})
 
 st.set_page_config(page_title="Scanner Halal Blockchain", page_icon="⛓️", layout="centered")
 st.markdown("""
-<link rel="manifest" href="app/static/manifest.json">
+<link rel="manifest" href="/app/static/manifest.json">
 <meta name="theme-color" content="#0a2a6b">
-<script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('app/static/sw.js'); }</script>
+<script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/app/static/sw.js'); }</script>
 <style>
 #MainMenu{visibility:hidden} footer{visibility:hidden} header{visibility:hidden}
 .block-container{padding-top:10px; padding-bottom:120px;}
@@ -307,14 +306,14 @@ if menu=="Codes VIP (Admin)":
         save_json(VIP_CODES_FILE, vip_codes)
         add_block({"type":"VIP_CODES_GENERATED","count":5})
         st.success("5 codes générés + bloc"); st.rerun()
-    if st.button("⬅️"):
+    if st.button("⬅️ Retour Home"):
         st.session_state.bottom_nav="Home"; st.rerun()
     st.stop()
 
 if menu=="Home":
-    # ========== SCANNER PLEIN ECRAN DEMANDÉ ==========
+    # ========== SCANNER PLEIN ECRAN ==========
     if st.session_state.scan_mode=="camera":
-        if st.button("⬅️", use_container_width=True, key="back_full_scan"):
+        if st.button("⬅️ Retour", use_container_width=True, key="back_full_scan"):
             st.session_state.scan_mode=None
             st.rerun()
         st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:12px; text-align:center; color:white; margin-bottom:10px"><div style="font-weight:900">📸 SCANNER BLOCKCHAIN PLEIN ECRAN</div><div style="font-size:11px; color:#00ff88">Place le code-barres dans le cadre</div></div>""", unsafe_allow_html=True)
@@ -369,7 +368,7 @@ if menu=="Home":
                 st.rerun()
 
     if st.session_state.bottom_nav=="CHANGE_CODE":
-        if st.button("⬅️", key="back_code"): st.session_state.bottom_nav="Home"; st.rerun()
+        if st.button("⬅️ Retour", key="back_code"): st.session_state.bottom_nav="Home"; st.rerun()
         st.subheader("🔑 Changer code")
         a = st.text_input("Ancien code", type="password", key="old_code")
         b = st.text_input("Nouveau code", type="password", key="new_code1")
@@ -381,7 +380,7 @@ if menu=="Home":
             else: users[user_email]['pwd']=b; users[user_email]['password']=b; save_json(USERS_FILE, users); add_block({"type":"PASSWORD_CHANGE","user":user_email}); st.success("Code changé + bloc!"); st.session_state.bottom_nav="Home"; st.rerun()
         st.stop()
     if st.session_state.bottom_nav in ["VIP_ALIMENTS","VIP_DOUAS","VIP_HADITHS"]:
-        if st.button("⬅️"): st.session_state.bottom_nav="Home"; st.rerun()
+        if st.button("⬅️ Retour Home VIP"): st.session_state.bottom_nav="Home"; st.rerun()
         nom=st.session_state.bottom_nav.replace("VIP_","")
         st.markdown(f"""<div class="card-vip"><div style="font-size:70px">🔒</div><div style="font-weight:900; color:gold; font-size:22px">{nom} - VIP Seulement</div><div style="margin-top:10px; font-size:13px">Paye puis entre ton CODE VIP</div></div>""", unsafe_allow_html=True)
         st.link_button("💳 PAYER 1500F WAVE - Obtenir CODE", WAVE_LINK, type="primary", use_container_width=True)
@@ -398,7 +397,7 @@ if menu=="Home":
             else: st.error("❌ Code invalide ou déjà utilisé")
         st.stop()
     if st.session_state.bottom_nav=="SAVOIR":
-        if st.button("⬅️", key="back_savoir"): st.session_state.bottom_nav="Home"; st.rerun()
+        if st.button("⬅️ Retour", key="back_savoir"): st.session_state.bottom_nav="Home"; st.rerun()
         st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📚</div><div style="font-weight:900">SAVOIR ISLAMIQUE</div><div style="font-size:11px">Coran gratuit + DL, reste VIP + Blockchain</div></div>""", unsafe_allow_html=True)
         c1,c2=st.columns(2)
         with c1:
@@ -468,7 +467,7 @@ if menu=="Home":
         st.link_button("💎 Passer VIP 1500F ILLIMITÉ - Blockchain", WAVE_LINK, type="primary", use_container_width=True)
 
 elif menu=="Coran":
-    if st.button("⬅️", key="back_coran"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️ Retour Coran", key="back_coran"): st.session_state.bottom_nav="Home"; st.rerun()
     st.markdown("""<div style="background:linear-gradient(135deg,#00a651,#00c853); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📖⛓️</div><div style="font-weight:900; font-size:20px">CORAN 114 - BLOCKCHAIN</div></div>""", unsafe_allow_html=True)
     st.markdown("### 📥 Téléchargements Coran")
     cdl1, cdl2 = st.columns(2)
@@ -484,7 +483,7 @@ elif menu=="Coran":
     base_url = RECITATEURS[recitateur_nom]
     if st.session_state.selected_sourate:
         s_num = st.session_state.selected_sourate; s_nom = SOURATES_NOMS[s_num-1]; audio_url = f"{base_url}{s_num}.mp3"
-        if st.button("⬅️", key="back_sourate_list"):
+        if st.button("⬅️ Retour liste", key="back_sourate_list"):
             st.session_state.selected_sourate = None; st.rerun()
         st.markdown(f"""<div style="background:white; border-radius:20px; padding:20px; border:3px solid #00a651; text-align:center"><div style="font-size:60px">📖</div><div style="font-weight:900; font-size:22px; color:#0a2a6b">{s_num}. {s_nom}</div></div>""", unsafe_allow_html=True)
         st.audio(audio_url, format="audio/mp3")
@@ -504,7 +503,7 @@ elif menu=="Coran":
             with c3: st.link_button("📥", f"{RECITATEURS[recitateur_nom]}{i}.mp3", use_container_width=True)
 
 elif menu=="Jeux":
-    if st.button("⬅️", key="back_jeux"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️ Retour Jeux", key="back_jeux"): st.session_state.bottom_nav="Home"; st.rerun()
     st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">🎮⛓️</div><div style="font-weight:900">JEUX ISLAMIQUES BLOCKCHAIN</div><div style="font-size:11px; color:#00ff88">Chaque téléchargement = 1 bloc</div></div>""", unsafe_allow_html=True)
     st.markdown("### 📥 Télécharger pour jouer offline")
     d1,d2 = st.columns(2)
@@ -533,7 +532,7 @@ elif menu=="Hadiths":
     if not user.get('is_vip'):
         st.markdown("""<div class="card-vip"><div style="font-size:70px">🔒</div><div style="font-weight:900; color:gold">Hadiths VIP - CODE requis</div></div>""", unsafe_allow_html=True)
         st.link_button("💳 PAYER 1500F POUR CODE", WAVE_LINK, type="primary", use_container_width=True); st.stop()
-    if st.button("⬅️", key="back_hadith"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️ Retour Hadiths", key="back_hadith"): st.session_state.bottom_nav="Home"; st.rerun()
     st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📜</div><div style="font-weight:900">40 HADITHS NAWAWI</div></div>""", unsafe_allow_html=True)
     if st.session_state.selected_hadith:
         h = st.session_state.selected_hadith
@@ -551,7 +550,7 @@ elif menu=="Aliments":
     if not user.get('is_vip'):
         st.markdown("""<div class="card-vip"><div style="font-size:70px">🔒</div><div style="font-weight:900; color:gold">Aliments VIP - CODE requis</div></div>""", unsafe_allow_html=True)
         st.link_button("💳 PAYER 1500F POUR CODE", WAVE_LINK, type="primary", use_container_width=True); st.stop()
-    if st.button("⬅️", key="back_alim"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️ Retour Aliments", key="back_alim"): st.session_state.bottom_nav="Home"; st.rerun()
     search = st.text_input("🔍 Cherche aliment", placeholder="Ex: porc, poulet...")
     for a in ALIMENTS_DATA:
         if search.lower() in a['nom'].lower() or not search:
@@ -561,7 +560,7 @@ elif menu=="Douas":
     if not user.get('is_vip'):
         st.markdown("""<div class="card-vip"><div style="font-size:70px">🔒</div><div style="font-weight:900; color:gold">Douas VIP - CODE requis</div></div>""", unsafe_allow_html=True)
         st.link_button("💳 PAYER 1500F POUR CODE", WAVE_LINK, type="primary", use_container_width=True); st.stop()
-    if st.button("⬅️", key="back_douas"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️ Retour Douas", key="back_douas"): st.session_state.bottom_nav="Home"; st.rerun()
     st.title("🤲 50 Douas")
     st.markdown("<div class='card-graph'>Bismillah - Au nom d'Allah<br>Alhamdulillah - Louange à Allah<br>SubhanAllah - Gloire à Allah</div>", unsafe_allow_html=True)
 
