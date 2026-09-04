@@ -15,20 +15,16 @@ MAX_PHOTO_SIZE = int(2.5 * 1024 * 1024)
 os.makedirs("profile_pics", exist_ok=True)
 os.makedirs("static", exist_ok=True)
 
-# ====== LOGO.JPEG -> ICONE APK ======
-# Si tu as mis logo.jpeg à côté de app.py sur GitHub, on le copie dans static
 if os.path.exists("logo.jpeg"):
     try:
         shutil.copyfile("logo.jpeg", "static/logo.jpeg")
     except:
         pass
-# Fallback si logo.jpeg est déjà dans static
 logo_for_manifest = "/app/static/logo.jpeg"
 logo_exists_local = os.path.exists("static/logo.jpeg") or os.path.exists("logo.jpeg")
 
-# ====== MANIFEST + SW CORRIGÉ POUR PWABUILDER APK AVEC LOGO.JPEG ======
 manifest = {
-  "name": "Scanner Halal",
+  "name": "Scanner Halal Blockchain",
   "short_name": "Halal Scan",
   "description": "Scanner Halal 2,5 Mo + historique blockchain immuable",
   "start_url": "/",
@@ -47,7 +43,6 @@ with open("static/manifest.json","w",encoding="utf-8") as f:
 with open("static/sw.js","w") as f:
     f.write('self.addEventListener("install", e=>{e.waitUntil(caches.open("halal-v2").then(c=>c.addAll(["/"])))});self.addEventListener("fetch", e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})')
 
-# ================= BLOCKCHAIN =================
 def calculate_hash(index, timestamp, data, previous_hash):
     value = f"{index}{timestamp}{json.dumps(data, sort_keys=True, ensure_ascii=False)}{previous_hash}"
     return hashlib.sha256(value.encode()).hexdigest()
@@ -172,7 +167,20 @@ def extract_code(t):
 
 users=load_json(USERS_FILE,{})
 
-# Page icon utilise logo.jpeg si présent
+# Fonction pour afficher logo en base64
+def get_logo_b64():
+    try:
+        if os.path.exists("static/logo.jpeg"):
+            with open("static/logo.jpeg","rb") as f:
+                return base64.b64encode(f.read()).decode()
+        elif os.path.exists("logo.jpeg"):
+            with open("logo.jpeg","rb") as f:
+                return base64.b64encode(f.read()).decode()
+    except:
+        return None
+    return None
+
+logo_b64 = get_logo_b64()
 page_icon_path = "logo.jpeg" if os.path.exists("logo.jpeg") else "⛓️"
 st.set_page_config(page_title="Scanner Halal Blockchain", page_icon=page_icon_path if os.path.exists("logo.jpeg") else "⛓️", layout="centered")
 st.markdown("""
@@ -194,10 +202,11 @@ for k in ['user','page','reset_code','scan_mode','bottom_nav','selected_menu','a
         st.session_state[k] = None if k not in ['page','bottom_nav','ad_watching','monetag_count'] else ("auth" if k=='page' else "Home" if k=='bottom_nav' else False if k=='ad_watching' else 0)
 
 if st.session_state.page=="auth":
-    # Affiche logo.jpeg si présent
-    if os.path.exists("logo.jpeg"):
-        st.image("logo.jpeg", width=120)
-    st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:25px; text-align:center; color:white"><div style="font-size:70px">⛓️🕌</div><div style="font-size:24px; font-weight:900">SCANNER HALAL BLOCKCHAIN</div><div style="font-size:10px">2,5 Mo photo + Historique immuable + APK logo.jpeg</div></div>""", unsafe_allow_html=True)
+    # ====== ICI ON REMPLACE L'ICONE VERTE PAR LOGO ORANGE ======
+    if logo_b64:
+        st.markdown(f"""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:25px; text-align:center; color:white"><img src="data:image/jpeg;base64,{logo_b64}" style="width:110px;height:110px;border-radius:20px;object-fit:cover;border:3px solid gold;box-shadow:0 4px 12px rgba(0,0,0,0.4)"><div style="font-size:24px; font-weight:900; margin-top:12px">SCANNER HALAL BLOCKCHAIN</div><div style="font-size:10px">2,5 Mo photo + Historique immuable + APK logo.jpeg</div></div>""", unsafe_allow_html=True)
+    else:
+        st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:25px; text-align:center; color:white"><div style="font-size:24px; font-weight:900">SCANNER HALAL BLOCKCHAIN</div><div style="font-size:10px">2,5 Mo photo + Historique immuable + APK logo.jpeg</div></div>""", unsafe_allow_html=True)
     t1,t2,t3=st.tabs(["Connexion","Inscription","Code oublié"])
     with t1:
         e=st.text_input("Email", key="email_connexion").strip().lower()
