@@ -15,13 +15,13 @@ MAX_PHOTO_SIZE = int(2.5 * 1024 * 1024)
 os.makedirs("profile_pics", exist_ok=True)
 os.makedirs("static", exist_ok=True)
 
-if os.path.exists("logo.jpeg"):
+if os.path.exists("logo.png"):
     try:
-        shutil.copyfile("logo.jpeg", "static/logo.jpeg")
+        shutil.copyfile("logo.png", "static/logo.png")
     except:
         pass
-logo_for_manifest = "/app/static/logo.jpeg"
-logo_exists_local = os.path.exists("static/logo.jpeg") or os.path.exists("logo.jpeg")
+logo_for_manifest = "/app/static/logo.png"
+logo_exists_local = os.path.exists("static/logo.png") or os.path.exists("logo.png")
 
 manifest = {
   "name": "Scanner Halal Blockchain",
@@ -33,8 +33,8 @@ manifest = {
   "theme_color": "#0a2a6b",
   "orientation": "portrait",
   "icons": [
-    {"src": logo_for_manifest,"sizes": "192x192","type": "image/jpeg","purpose": "any maskable"},
-    {"src": logo_for_manifest,"sizes": "512x512","type": "image/jpeg","purpose": "any maskable"}
+    {"src": logo_for_manifest,"sizes": "192x192","type": "image/png","purpose": "any maskable"},
+    {"src": logo_for_manifest,"sizes": "512x512","type": "image/png","purpose": "any maskable"}
   ]
 }
 with open("static/manifest.json","w",encoding="utf-8") as f:
@@ -170,19 +170,19 @@ users=load_json(USERS_FILE,{})
 # Fonction pour afficher logo en base64
 def get_logo_b64():
     try:
-        if os.path.exists("static/logo.jpeg"):
-            with open("static/logo.jpeg","rb") as f:
+        if os.path.exists("static/logo.png"):
+            with open("static/logo.png","rb") as f:
                 return base64.b64encode(f.read()).decode()
-        elif os.path.exists("logo.jpeg"):
-            with open("logo.jpeg","rb") as f:
+        elif os.path.exists("logo.png"):
+            with open("logo.png","rb") as f:
                 return base64.b64encode(f.read()).decode()
     except:
         return None
     return None
 
 logo_b64 = get_logo_b64()
-page_icon_path = "logo.jpeg" if os.path.exists("logo.jpeg") else "⛓️"
-st.set_page_config(page_title="Scanner Halal Blockchain", page_icon=page_icon_path if os.path.exists("logo.jpeg") else "⛓️", layout="centered")
+page_icon_path = "logo.png" if os.path.exists("logo.png") else "⛓️"
+st.set_page_config(page_title="Scanner Halal Blockchain", page_icon=page_icon_path if os.path.exists("logo.png") else "⛓️", layout="centered")
 st.markdown("""
 <link rel="manifest" href="/app/static/manifest.json">
 <meta name="theme-color" content="#0a2a6b">
@@ -204,9 +204,9 @@ for k in ['user','page','reset_code','scan_mode','bottom_nav','selected_menu','a
 if st.session_state.page=="auth":
     # ====== ICI ON REMPLACE L'ICONE VERTE PAR LOGO ORANGE ======
     if logo_b64:
-        st.markdown(f"""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:25px; text-align:center; color:white"><img src="data:image/jpeg;base64,{logo_b64}" style="width:110px;height:110px;border-radius:20px;object-fit:cover;border:3px solid gold;box-shadow:0 4px 12px rgba(0,0,0,0.4)"><div style="font-size:24px; font-weight:900; margin-top:12px">SCANNER HALAL BLOCKCHAIN</div><div style="font-size:10px">2,5 Mo photo + Historique immuable + APK logo.jpeg</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:25px; text-align:center; color:white"><img src="data:image/png;base64,{logo_b64}" style="width:110px;height:110px;border-radius:20px;object-fit:cover;border:3px solid gold;box-shadow:0 4px 12px rgba(0,0,0,0.4)"><div style="font-size:24px; font-weight:900; margin-top:12px">SCANNER HALAL BLOCKCHAIN</div><div style="font-size:10px">2,5 Mo photo + Historique immuable + APK logo.png</div></div>""", unsafe_allow_html=True)
     else:
-        st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:25px; text-align:center; color:white"><div style="font-size:24px; font-weight:900">SCANNER HALAL BLOCKCHAIN</div><div style="font-size:10px">2,5 Mo photo + Historique immuable + APK logo.jpeg</div></div>""", unsafe_allow_html=True)
+        st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:25px; text-align:center; color:white"><div style="font-size:24px; font-weight:900">SCANNER HALAL BLOCKCHAIN</div><div style="font-size:10px">2,5 Mo photo + Historique immuable + APK logo.png</div></div>""", unsafe_allow_html=True)
     t1,t2,t3=st.tabs(["Connexion","Inscription","Code oublié"])
     with t1:
         e=st.text_input("Email", key="email_connexion").strip().lower()
@@ -465,7 +465,7 @@ if menu=="Home":
             st.markdown(f"""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); padding:15px; border-radius:12px; color:white; text-align:center; min-height:300px"><b style="color:gold">🌙 Hijri</b><br><span style="font-size:36px; font-weight:bold">{d_h}</span><br><b style="color:gold; font-size:20px">{HIJRI_MONTHS[m_h-1]}</b><br><b style="font-size:20px">{y_h} AH</b></div>""", unsafe_allow_html=True)
         st.stop()
 
-    st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📸⛓️</div><div style="font-weight:900">SCANNER HALAL PRO BLOCKCHAIN</div><div style="font-size:11px; opacity:0.8; color:#00ff88">Chaque scan = 1 bloc immuable | Icône logo.jpeg</div></div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📸⛓️</div><div style="font-weight:900">SCANNER HALAL PRO BLOCKCHAIN</div><div style="font-size:11px; opacity:0.8; color:#00ff88">Chaque scan = 1 bloc immuable | Icône logo.png</div></div>""", unsafe_allow_html=True)
     col_scan, col_savoir, col_jeux = st.columns(3)
     with col_scan:
         if st.button("📷\nSCANNER\nPLEIN ECRAN", use_container_width=True, key="scanner_toggle"):
@@ -594,9 +594,9 @@ elif menu=="Parametres":
     if is_valid: st.success(f"✅ {msg}")
     else: st.error(f"❌ {msg}")
     used_kb = len(json.dumps(users).encode())/1024 + len(json.dumps(chain).encode())/1024
-    st.markdown(f"""<div class='card-graph' style='text-align:left; font-size:12px'>💾 Mémoire users.json + blockchain: {used_kb:.1f} KB<br>🖼️ Réservé photo profil: <b>2,5 Mo (2560 KB)</b><br>📸 Photo actuelle: {(len(profile_b64 or '')/1024):.1f} KB thumbnail<br>⛓️ Total blocs: {len(chain)}<br>📜 Tes scans: {len(user.get('history',[]))} | 📥 Tes DL: {len(user.get('history_downloads',[]))}<br>🖼️ Icône APK: logo.jpeg -> {logo_for_manifest} | Existe: {logo_exists_local}</div>""", unsafe_allow_html=True)
-    if os.path.exists("static/logo.jpeg"):
-        st.image("static/logo.jpeg", caption="Logo actuel pour APK - logo.jpeg", width=150)
+    st.markdown(f"""<div class='card-graph' style='text-align:left; font-size:12px'>💾 Mémoire users.json + blockchain: {used_kb:.1f} KB<br>🖼️ Réservé photo profil: <b>2,5 Mo (2560 KB)</b><br>📸 Photo actuelle: {(len(profile_b64 or '')/1024):.1f} KB thumbnail<br>⛓️ Total blocs: {len(chain)}<br>📜 Tes scans: {len(user.get('history',[]))} | 📥 Tes DL: {len(user.get('history_downloads',[]))}<br>🖼️ Icône APK: logo.png -> {logo_for_manifest} | Existe: {logo_exists_local}</div>""", unsafe_allow_html=True)
+    if os.path.exists("static/logo.png"):
+        st.image("static/logo.png", caption="Logo actuel pour APK - logo.png - Nouveau logo or", width=150)
     c1,c2,c3 = st.columns(3)
     with c1:
         if st.button("🗑️ Vider 2,5 Mo", use_container_width=True):
