@@ -3,6 +3,7 @@ import json, os, random, re, base64, calendar, time, urllib.parse, io, hashlib, 
 from datetime import datetime, date
 from PIL import Image
 
+# ================= CONFIG LIENS & FICHIERS =================
 WAVE_LINK = "https://pay.wave.com/m/M_ci_bqKBEWPbP0OO/c/ci/?amount=1500"
 MONETAG_LINK = "https://omg10.com/4/11717935"
 APP_LINK = "https://scanner-halal-mbcyfmxur68mw8n9zd72ul.streamlit.app"
@@ -15,6 +16,7 @@ MAX_PHOTO_SIZE = int(2.5 * 1024 * 1024)
 os.makedirs("profile_pics", exist_ok=True)
 os.makedirs("static", exist_ok=True)
 
+# Logo APK
 if os.path.exists("logo.png"):
     try:
         shutil.copyfile("logo.png", "static/logo.png")
@@ -23,6 +25,7 @@ if os.path.exists("logo.png"):
 logo_for_manifest = "/app/static/logo.png"
 logo_exists_local = os.path.exists("static/logo.png") or os.path.exists("logo.png")
 
+# Manifest PWA
 manifest = {
   "name": "Scanner Halal Blockchain",
   "short_name": "Halal Scan",
@@ -41,25 +44,29 @@ manifest = {
 }
 with open("static/manifest.json","w",encoding="utf-8") as f:
     json.dump(manifest,f,indent=2)
-
 with open("static/sw.js","w") as f:
     f.write('self.addEventListener("install", e=>{e.waitUntil(caches.open("halal-v2").then(c=>c.addAll(["/"])))});self.addEventListener("fetch", e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})')
 
+# ================= BLOCKCHAIN FONCTIONS =================
 def calculate_hash(index, timestamp, data, previous_hash):
     value = f"{index}{timestamp}{json.dumps(data, sort_keys=True, ensure_ascii=False)}{previous_hash}"
     return hashlib.sha256(value.encode()).hexdigest()
+
 def load_blockchain():
     if os.path.exists(BLOCKCHAIN_FILE):
         try:
             with open(BLOCKCHAIN_FILE,'r',encoding='utf-8') as fp:
                 return json.load(fp)
-        except: pass
+        except:
+            pass
     genesis = {"index": 0,"timestamp": datetime.now().isoformat(),"data": {"type":"GENESIS","message":"Scanner Halal Blockchain démarré","user":"system"},"previous_hash": "0"*64,"hash": ""}
     genesis["hash"] = calculate_hash(genesis["index"], genesis["timestamp"], genesis["data"], genesis["previous_hash"])
     return [genesis]
+
 def save_blockchain(chain):
     with open(BLOCKCHAIN_FILE,'w',encoding='utf-8') as fp:
         json.dump(chain,fp,ensure_ascii=False,indent=2)
+
 def add_block(data):
     chain = load_blockchain()
     last = chain[-1]
@@ -68,6 +75,7 @@ def add_block(data):
     chain.append(new_block)
     save_blockchain(chain)
     return new_block
+
 def verify_blockchain():
     chain = load_blockchain()
     for i in range(1, len(chain)):
@@ -83,21 +91,26 @@ def load_json(f,d):
             with open(f,'r',encoding='utf-8') as fp: return json.load(fp)
         except: return d
     return d
+
 def save_json(f,data):
     with open(f,'w',encoding='utf-8') as fp: json.dump(data,fp,ensure_ascii=False,indent=2)
 
+# VIP CODES
 if not os.path.exists(VIP_CODES_FILE):
     codes = {f"VIP-{random.randint(1000,9999)}-{random.randint(1000,9999)}": {"used": False, "used_by": None} for _ in range(20)}
     codes["VIP-2026-TEST"] = {"used": False, "used_by": None}
     save_json(VIP_CODES_FILE, codes)
 vip_codes = load_json(VIP_CODES_FILE, {})
+
 def check_vip_code(code):
     code = code.strip().upper()
     return code in vip_codes and not vip_codes[code]["used"]
+
 def activate_vip_code(code, email):
     code = code.strip().upper()
     vip_codes[code]["used"] = True; vip_codes[code]["used_by"] = email
     save_json(VIP_CODES_FILE, vip_codes)
+
 def compress_and_save_2_5mo(file, email, type_name):
     try:
         file_size = len(file.getvalue())
@@ -115,6 +128,7 @@ def compress_and_save_2_5mo(file, email, type_name):
         return (path, thumb_b64, len(compressed)), None
     except Exception as e: return None, str(e)
 
+# ================= DONNEES ISLAM =================
 ALIMENTS_DATA = [
     {"nom": "Poulet (halal)", "statut": "HALAL", "icon": "🐔", "desc": "Halal si égorgé selon rite islamique, prononcer Bismillah"},
     {"nom": "Boeuf halal", "statut": "HALAL", "icon": "🐄", "desc": "Halal avec sacrifice rituel"},
@@ -182,25 +196,11 @@ def get_logo_b64():
     return None
 
 logo_b64 = get_logo_b64()
-page_icon_path = "logo.png" if os.path.exists("logo.png") else "⛓️"
-st.set_page_config(page_title="Scanner Halal Blockchain", page_icon=page_icon_path if os.path.exists("logo.png") else "⛓️", layout="centered")
+page_icon_path = "logo.png" if os.path.exists("logo.png") else "📱"
+st.set_page_config(page_title="Scanner Halal", page_icon=page_icon_path if os.path.exists("logo.png") else "📱", layout="centered")
 st.markdown(f"""
-<link rel="manifest" href="/app/static/manifest.json?v=3">
+<link rel="manifest" href="/app/static/manifest.json?v=4">
 <meta name="theme-color" content="#0a2a6b">
-<script>
-document.querySelectorAll('link[rel="manifest"]').forEach(el => {{
-  if(el.getAttribute('href')!== '/app/static/manifest.json?v=3') {{
-    el.remove();
-  }}
-}});
-var link = document.createElement('link');
-link.rel = 'manifest';
-link.href = '/app/static/manifest.json?v=3';
-document.head.appendChild(link);
-if ('serviceWorker' in navigator) {{
-  navigator.serviceWorker.register('/app/static/sw.js?v=3');
-}}
-</script>
 <style>
 #MainMenu{{visibility:hidden}} footer{{visibility:hidden}} header{{visibility:hidden}}
 .block-container{{padding-top:10px; padding-bottom:120px;}}
@@ -211,16 +211,22 @@ div[data-testid="stButton"] > button {{border-radius:18px!important; padding:18p
 </style>
 """, unsafe_allow_html=True)
 
-for k in ['user','page','reset_code','scan_mode','bottom_nav','selected_menu','ad_watching','ad_start_time','selected_hadith','selected_aliment','selected_sourate','monetag_count']:
+for k in ['user','page','reset_code','scan_mode','bottom_nav','selected_menu','ad_watching','ad_start_time','selected_hadith','selected_aliment','selected_sourate','monetag_count','share_result']:
     if k not in st.session_state:
-        st.session_state[k] = None if k not in ['page','bottom_nav','ad_watching','monetag_count'] else ("auth" if k=='page' else "Home" if k=='bottom_nav' else False if k=='ad_watching' else 0)
+        if k=='page': st.session_state[k]="auth"
+        elif k=='bottom_nav': st.session_state[k]="Home"
+        elif k=='ad_watching': st.session_state[k]=False
+        elif k=='monetag_count': st.session_state[k]=0
+        elif k=='share_result': st.session_state[k]=""
+        else: st.session_state[k]=None
 
+# ================= AUTH =================
 if st.session_state.page=="auth":
     if logo_b64:
-        st.markdown(f"""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:25px; text-align:center; color:white"><img src="data:image/png;base64,{logo_b64}" style="width:110px;height:110px;border-radius:20px;object-fit:cover;border:3px solid gold;box-shadow:0 4px 12px rgba(0,0,0,0.4)"><div style="font-size:24px; font-weight:900; margin-top:12px">SCANNER HALAL BLOCKCHAIN</div><div style="font-size:10px">2,5 Mo photo + Historique immuable + APK logo.png</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:25px; text-align:center; color:white"><img src="data:image/png;base64,{logo_b64}" style="width:110px;height:110px;border-radius:20px;object-fit:cover;border:3px solid gold;box-shadow:0 4px 12px rgba(0,0,0,0.4)"><div style="font-size:24px; font-weight:900; margin-top:12px">SCANNER HALAL</div><div style="font-size:11px">2,5 Mo photo + Blockchain immuable</div></div>""", unsafe_allow_html=True)
     else:
-        st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:25px; text-align:center; color:white"><div style="font-size:24px; font-weight:900">SCANNER HALAL BLOCKCHAIN</div><div style="font-size:10px">2,5 Mo photo + Historique immuable + APK logo.png</div></div>""", unsafe_allow_html=True)
-    t1,t2,t3=st.tabs(["Connexion","Inscription","Code oublié"])
+        st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:25px; text-align:center; color:white"><div style="font-size:24px; font-weight:900">SCANNER HALAL</div><div style="font-size:11px">2,5 Mo photo + Blockchain immuable</div></div>""", unsafe_allow_html=True)
+    t1,t2,t3=st.tabs(["🔑 Se connecter","✅ S'inscrire","❓ Code oublié"])
     with t1:
         e=st.text_input("Email", key="email_connexion").strip().lower()
         p=st.text_input("Mot de passe",type="password", key="pwd_connexion")
@@ -230,36 +236,36 @@ if st.session_state.page=="auth":
                 st.session_state.user=e; st.session_state.page="app"; st.rerun()
             else: st.error(f"Incorrect. Comptes: {len(users)}")
     with t2:
-        nom=st.text_input("Nom", key="nom_insc").strip()
+        nom=st.text_input("Nom complet *", key="nom_insc").strip()
         c1,c2=st.columns([2,3])
         with c1: pays=st.selectbox("Pays", ["+225 CI","+221 SN","+223 ML","+224 GN","+226 BF","+229 BJ","+33 FR"], key="pays_insc")
-        with c2: numero=st.text_input("Numero", key="num_insc").strip()
-        er=st.text_input("Email", key="email_insc").strip().lower()
-        p1=st.text_input("Mot de passe",type="password",key="p1")
-        p2=st.text_input("Confirmer",type="password",key="p2")
-        if st.button("✨ Créer",type="primary",use_container_width=True):
-            if not nom or not numero or not er or not p1: st.error("Remplis tous")
-            elif not is_valid_pwd(p1): st.error("Mot de passe faible: 6 car min avec lettres + chiffres ex: baba2000")
+        with c2: numero=st.text_input("WhatsApp *", key="num_insc", placeholder="07 00 00 00 00").strip()
+        er=st.text_input("Email *", key="email_insc").strip().lower()
+        p1=st.text_input("Mot de passe *",type="password",key="p1", placeholder="Ex: baba2000")
+        p2=st.text_input("Confirmer *",type="password",key="p2")
+        if st.button("✨ S'inscrire et entrer",type="primary",use_container_width=True):
+            if not nom or not numero or not er or not p1: st.error("Remplis tous les champs *")
+            elif not is_valid_pwd(p1): st.error("Mot de passe faible: 6 caractères min avec lettres + chiffres")
             elif p1!=p2: st.error("Mots de passe différents")
             elif er in users:
-                st.warning("Email déjà utilisé, va sur Connexion")
+                st.warning("Email déjà utilisé, connexion auto")
                 st.session_state.user=er; st.session_state.page="app"; st.rerun()
             else:
                 users[er]={'nom':nom,'full_name':nom,'wave':f"{extract_code(pays)} {numero}",'pays':pays,'pwd':p1,'password':p1,'scans':0,'is_vip':False,'history':[],'history_downloads':[],'profile_b64':None,'cover_b64':None,'vip_code':None}
                 save_json(USERS_FILE,users)
                 add_block({"type":"NEW_USER","user":er,"nom":nom})
-                st.success("Compte créé! Connexion auto..."); st.balloons()
+                st.success(f"Bienvenue {nom}! Connexion automatique..."); st.balloons()
                 st.session_state.user=er; st.session_state.page="app"; time.sleep(1); st.rerun()
     with t3:
         ef=st.text_input("Email", key="email_oublie").strip().lower()
-        if st.button("Envoyer code"):
+        if st.button("Envoyer code", use_container_width=True):
             if ef in users:
                 code=str(random.randint(100000,999999)); st.session_state.reset_code=code; st.session_state.reset_email=ef; st.success(f"Code demo: {code}")
             else: st.error("Email non trouvé, crée un compte")
         if st.session_state.reset_code:
             ci=st.text_input("Code reçu").strip()
             np=st.text_input("Nouveau mot de passe",type="password", key="new_pwd")
-            if st.button("Réinitialiser"):
+            if st.button("Réinitialiser", use_container_width=True):
                 if ci==st.session_state.reset_code:
                     users[st.session_state.reset_email]['pwd']=np; users[st.session_state.reset_email]['password']=np; save_json(USERS_FILE,users); st.success("Mot de passe changé! Va sur Connexion"); st.session_state.reset_code=None
                 else: st.error("Code faux")
@@ -282,46 +288,12 @@ def log_download(name):
     save_json(USERS_FILE,users)
     add_block({"type":"DOWNLOAD","user":user_email,"file":name})
 
+# ================= HEADER PROFIL =================
 cover_b64=user.get('cover_b64')
 profile_b64=user.get('profile_b64')
 cover_style=f"background-image:url(data:image/jpeg;base64,{cover_b64}); background-size:cover; background-position:center;" if cover_b64 else "background:linear-gradient(90deg,#00c6ff,#0072ff);"
 profile_html=f"<img src='data:image/jpeg;base64,{profile_b64}' style='width:75px;height:75px;border-radius:50%;border:3px solid #00ff88;object-fit:cover;'>" if profile_b64 else "<div style='width:75px;height:75px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;font-size:38px;border:3px solid #00ff88;'>👤</div>"
-st.markdown(f"""<div style="{cover_style} padding:15px; border-radius:18px; margin-bottom:12px;"><div style="display:flex; align-items:center; gap:12px; background:rgba(0,0,0,0.45); padding:12px; border-radius:12px;">{profile_html}<div style="color:white;"><b style="font-size:20px;">{user.get('nom','Utilisateur')}</b><br><span style="font-size:11px; opacity:0.9; color:#00ff88">⛓️ {len(load_blockchain())} blocs | {'👑 VIP' if user.get('is_vip') else f"{len(user['history'])} scans"}</span></div><div style="margin-left:auto; font-size:28px">⛓️</div></div></div>""", unsafe_allow_html=True)
-
-with st.expander("✏️ Modifier photo - 2,5 Mo réservé + Blockchain"):
-    st.markdown(f"""<div class='card-graph' style='text-align:left; font-size:11px'>💾 Réservé: <b>2,5 Mo (2560 KB)</b><br>📏 Compression: 700x700 JPEG 80%<br>📸 Actuel: {(len(profile_b64 or '')/1024):.1f} KB thumbnail<br>⛓️ Chaque modif = 1 bloc blockchain</div>""", unsafe_allow_html=True)
-    new_pic = st.file_uploader("📷 Photo de profil (max 2,5 Mo)", type=['jpg','png','jpeg'], key="new_profile_pic_25")
-    if new_pic:
-        result, err = compress_and_save_2_5mo(new_pic, user_email, "profile")
-        if err: st.error(f"❌ {err}")
-        else:
-            path, b64, size = result
-            users[user_email]['profile_b64']=b64; save_json(USERS_FILE,users)
-            add_block({"type":"PROFILE_UPDATE","user":user_email,"size_kb":size//1024})
-            st.success(f"✅ Sauvée {size/1024:.0f} KB / 2560 KB"); st.rerun()
-    new_cover = st.file_uploader("🖼️ Couverture (max 2,5 Mo)", type=['jpg','png','jpeg'], key="new_cover_pic_25")
-    if new_cover:
-        result, err = compress_and_save_2_5mo(new_cover, user_email, "cover")
-        if err: st.error(err)
-        else:
-            path, b64, size = result
-            users[user_email]['cover_b64']=b64; save_json(USERS_FILE,users)
-            add_block({"type":"COVER_UPDATE","user":user_email,"size_kb":size//1024})
-            st.success(f"✅ Couverture {size/1024:.0f} KB"); st.rerun()
-    new_name = st.text_input("✏️ Nouveau nom", value=user.get('nom',''), key="new_name_input")
-    if st.button("💾 Sauver le nom", use_container_width=True):
-        if new_name.strip():
-            users[user_email]['nom']=new_name.strip(); users[user_email]['full_name']=new_name.strip(); save_json(USERS_FILE,users)
-            add_block({"type":"NAME_UPDATE","user":user_email,"new_name":new_name.strip()})
-            st.success("Nom changé + bloc créé"); st.rerun()
-    if st.button("🗑️ Vider les 2,5 Mo réservés", use_container_width=True):
-        try:
-            if os.path.exists(f"profile_pics/{user_email}_profile.jpg"): os.remove(f"profile_pics/{user_email}_profile.jpg")
-            if os.path.exists(f"profile_pics/{user_email}_cover.jpg"): os.remove(f"profile_pics/{user_email}_cover.jpg")
-        except: pass
-        users[user_email]['profile_b64']=None; users[user_email]['cover_b64']=None; save_json(USERS_FILE,users)
-        add_block({"type":"STORAGE_CLEARED","user":user_email})
-        st.success("2,5 Mo libérés + bloc"); st.rerun()
+st.markdown(f"""<div style="{cover_style} padding:15px; border-radius:18px; margin-bottom:12px;"><div style="display:flex; align-items:center; gap:12px; background:rgba(0,0,0,0.45); padding:12px; border-radius:12px;">{profile_html}<div style="color:white;"><b style="font-size:20px;">{user.get('nom','Utilisateur')}</b><br><span style="font-size:11px; opacity:0.9; color:#00ff88">⛓️ {len(load_blockchain())} blocs | {'👑 VIP' if user.get('is_vip') else f"{len(user['history'])} scans"}</span></div></div></div>""", unsafe_allow_html=True)
 
 with st.sidebar:
     menu=st.radio("NAVIGATION", ["Home","Aliments","Coran","Hadiths","Douas","Parametres","Jeux","Codes VIP (Admin)"], label_visibility="collapsed")
@@ -331,6 +303,7 @@ with st.sidebar:
 if st.session_state.get('selected_menu'):
     menu=st.session_state.selected_menu; st.session_state.selected_menu=None
 
+# ================= CODES VIP =================
 if menu=="Codes VIP (Admin)":
     st.title("🔑 Générateur Codes VIP")
     st.markdown(f"<div class='card-graph'>Codes : {len(vip_codes)} | Blockchain : {len(load_blockchain())} blocs</div>", unsafe_allow_html=True)
@@ -344,16 +317,18 @@ if menu=="Codes VIP (Admin)":
         save_json(VIP_CODES_FILE, vip_codes)
         add_block({"type":"VIP_CODES_GENERATED","count":5})
         st.success("5 codes générés + bloc"); st.rerun()
-    if st.button("⬅️ Retour Home"):
+    if st.button("⬅️ Retour"):
         st.session_state.bottom_nav="Home"; st.rerun()
     st.stop()
 
+# ================= HOME =================
 if menu=="Home":
+    # MODE SCANNER PLEIN ECRAN
     if st.session_state.scan_mode=="camera":
         if st.button("⬅️ Retour", use_container_width=True, key="back_full_scan"):
             st.session_state.scan_mode=None
             st.rerun()
-        st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:12px; text-align:center; color:white; margin-bottom:10px"><div style="font-weight:900">📸 SCANNER BLOCKCHAIN PLEIN ECRAN</div><div style="font-size:11px; color:#00ff88">Place le code-barres dans le cadre</div></div>""", unsafe_allow_html=True)
+        st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:12px; text-align:center; color:white; margin-bottom:10px"><div style="font-weight:900">📸 SCANNER</div><div style="font-size:11px; color:#00ff88">Place le code-barres dans le cadre</div></div>""", unsafe_allow_html=True)
         barcode_html = """
         <div id="reader" style="width:100%; border-radius:18px; overflow:hidden; border:4px solid #00ff88; background:black"></div>
         <div id="result-pro" style="margin-top:10px; padding:15px; background:#e8f5e9; border-radius:12px; text-align:center; font-weight:900; display:none"></div>
@@ -376,7 +351,7 @@ if menu=="Home":
         st.divider()
         cam=st.camera_input("📸 Ou prendre photo produit", key="camera_full", label_visibility="visible")
         if cam:
-            with st.spinner("🤖 Analyse blockchain..."):
+            with st.spinner("🤖 Analyse..."):
                 time.sleep(1.2)
                 result=random.choice(["HALAL 100%","HARAM Détecté","DOUTEUX"])
                 color="green" if "HALAL" in result else "red" if "HARAM" in result else "orange"
@@ -385,23 +360,80 @@ if menu=="Home":
                 users[user_email]['history'].append({'date':datetime.now().strftime("%d/%m/%Y %H:%M"),'result':result})
                 save_json(USERS_FILE,users)
                 block = add_block({"type":"SCAN","user":user_email,"result":result})
-                st.success(f"⛓️ Bloc #{block['index']} Hash:{block['hash'][:12]}..."); st.balloons()
+                st.session_state.share_result = result
+                st.success(f"⛓️ Bloc #{block['index']} Hash:{block['hash'][:12]}...")
+                # BOUTON PARTAGER UNIQUE APRES RESULTAT
+                texte_partage = urllib.parse.quote(f"{result} vérifié avec Scanner Halal {APP_LINK}")
+                url_encode = urllib.parse.quote(APP_LINK)
+                with st.popover("📤 Partager", use_container_width=True):
+                    st.markdown("**Partager le résultat sur :**")
+                    st.link_button("🟢 WhatsApp", f"https://wa.me/?text={texte_partage}", use_container_width=True)
+                    st.link_button("🔵 Facebook", f"https://www.facebook.com/sharer/sharer.php?u={url_encode}", use_container_width=True)
+                    st.link_button("🟣 Instagram", "https://www.instagram.com/", use_container_width=True)
+                    st.caption("Tu es redirigé automatiquement")
+                st.balloons()
         st.stop()
 
-    col_title, col_menu = st.columns([0.85, 0.15])
+    # HEADER AVEC MENU 3 POINTS WHATSAPP
+    col_title, col_menu = st.columns([5, 1])
     with col_title:
-        st.markdown(f"### Salam {user.get('full_name','').split(' ')[0]} ⛓️")
+        st.markdown(f"### 🟢 {user.get('nom','')} - Salam")
     with col_menu:
-        with st.popover("⋮"):
-            if st.button("👤 Profil", use_container_width=True, key="m1"):
-                st.session_state.bottom_nav="Home"; st.rerun()
-            if st.button("🔑 Code", use_container_width=True, key="m2"):
+        with st.popover("⋮", use_container_width=True):
+            st.markdown(f"**👤 Profil**")
+            st.write(f"**Nom:** {user.get('nom','')}")
+            st.write(f"**Email:** {user_email}")
+            st.write(f"**Tel:** {user.get('wave','')}")
+            st.divider()
+            st.markdown("**📸 Modifier photo**")
+            st.caption("2,5 Mo max réservé + Blockchain")
+            new_pic = st.file_uploader("Profil", type=['jpg','png','jpeg'], key="new_profile_pic_25_pop", label_visibility="collapsed")
+            if new_pic:
+                result, err = compress_and_save_2_5mo(new_pic, user_email, "profile")
+                if err: st.error(f"❌ {err}")
+                else:
+                    path, b64, size = result
+                    users[user_email]['profile_b64']=b64; save_json(USERS_FILE,users)
+                    add_block({"type":"PROFILE_UPDATE","user":user_email,"size_kb":size//1024})
+                    st.success(f"✅ {size/1024:.0f} KB"); st.rerun()
+            new_cover = st.file_uploader("Couverture", type=['jpg','png','jpeg'], key="new_cover_pic_25_pop", label_visibility="collapsed")
+            if new_cover:
+                result, err = compress_and_save_2_5mo(new_cover, user_email, "cover")
+                if err: st.error(err)
+                else:
+                    path, b64, size = result
+                    users[user_email]['cover_b64']=b64; save_json(USERS_FILE,users)
+                    add_block({"type":"COVER_UPDATE","user":user_email,"size_kb":size//1024})
+                    st.success(f"✅ Couverture {size/1024:.0f} KB"); st.rerun()
+            new_name = st.text_input("✏️ Nouveau nom", value=user.get('nom',''), key="new_name_input_pop")
+            if st.button("💾 Sauver nom", use_container_width=True, key="save_name_pop"):
+                if new_name.strip():
+                    users[user_email]['nom']=new_name.strip(); users[user_email]['full_name']=new_name.strip(); save_json(USERS_FILE,users)
+                    add_block({"type":"NAME_UPDATE","user":user_email,"new_name":new_name.strip()})
+                    st.success("Nom changé + bloc"); st.rerun()
+            if user.get('profile_b64'):
+                if st.button("🗑️ Supprimer ma photo", use_container_width=True, key="del_photo_pop"):
+                    try:
+                        if os.path.exists(f"profile_pics/{user_email}_profile.jpg"): os.remove(f"profile_pics/{user_email}_profile.jpg")
+                    except: pass
+                    users[user_email]['profile_b64']=None; save_json(USERS_FILE,users)
+                    add_block({"type":"PROFILE_DELETED","user":user_email})
+                    st.success("Photo supprimée"); st.rerun()
+            st.divider()
+            if st.button("🔑 Changer code", use_container_width=True, key="m2"):
                 st.session_state.bottom_nav="CHANGE_CODE"; st.rerun()
             if st.button("📜 Blockchain", use_container_width=True, key="m3"):
                 st.session_state.selected_menu="Parametres"; st.rerun()
-            if st.button("🚪 Quitter", use_container_width=True, key="m4"):
-                for k in list(st.session_state.keys()): del st.session_state[k]
-                st.rerun()
+            if st.button("🗑️ Vider 2,5 Mo", use_container_width=True, key="clear_storage_pop"):
+                try:
+                    if os.path.exists(f"profile_pics/{user_email}_profile.jpg"): os.remove(f"profile_pics/{user_email}_profile.jpg")
+                    if os.path.exists(f"profile_pics/{user_email}_cover.jpg"): os.remove(f"profile_pics/{user_email}_cover.jpg")
+                except: pass
+                users[user_email]['profile_b64']=None; users[user_email]['cover_b64']=None; save_json(USERS_FILE,users)
+                add_block({"type":"STORAGE_CLEARED","user":user_email})
+                st.success("2,5 Mo libérés"); st.rerun()
+            if st.button("🚪 Déconnexion", use_container_width=True, key="m4"):
+                st.session_state.user=None; st.session_state.page="auth"; st.rerun()
 
     if st.session_state.bottom_nav=="CHANGE_CODE":
         if st.button("⬅️ Retour", key="back_code"): st.session_state.bottom_nav="Home"; st.rerun()
@@ -416,7 +448,7 @@ if menu=="Home":
             else: users[user_email]['pwd']=b; users[user_email]['password']=b; save_json(USERS_FILE, users); add_block({"type":"PASSWORD_CHANGE","user":user_email}); st.success("Code changé + bloc!"); st.session_state.bottom_nav="Home"; st.rerun()
         st.stop()
     if st.session_state.bottom_nav in ["VIP_ALIMENTS","VIP_DOUAS","VIP_HADITHS"]:
-        if st.button("⬅️ Retour Home VIP"): st.session_state.bottom_nav="Home"; st.rerun()
+        if st.button("⬅️ Retour"): st.session_state.bottom_nav="Home"; st.rerun()
         nom=st.session_state.bottom_nav.replace("VIP_","")
         st.markdown(f"""<div class="card-vip"><div style="font-size:70px">🔒</div><div style="font-weight:900; color:gold; font-size:22px">{nom} - VIP Seulement</div><div style="margin-top:10px; font-size:13px">Paye puis entre ton CODE VIP</div></div>""", unsafe_allow_html=True)
         st.link_button("💳 PAYER 1500F WAVE - Obtenir CODE", WAVE_LINK, type="primary", use_container_width=True)
@@ -478,7 +510,7 @@ if menu=="Home":
             st.markdown(f"""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); padding:15px; border-radius:12px; color:white; text-align:center; min-height:300px"><b style="color:gold">🌙 Hijri</b><br><span style="font-size:36px; font-weight:bold">{d_h}</span><br><b style="color:gold; font-size:20px">{HIJRI_MONTHS[m_h-1]}</b><br><b style="font-size:20px">{y_h} AH</b></div>""", unsafe_allow_html=True)
         st.stop()
 
-    st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📸⛓️</div><div style="font-weight:900">SCANNER HALAL PRO BLOCKCHAIN</div><div style="font-size:11px; opacity:0.8; color:#00ff88">Chaque scan = 1 bloc immuable | Icône logo.png</div></div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📸</div><div style="font-weight:900">SCANNER HALAL PRO</div><div style="font-size:11px; opacity:0.8; color:#00ff88">Chaque scan = 1 bloc immuable | Icône logo.png</div></div>""", unsafe_allow_html=True)
     col_scan, col_savoir, col_jeux = st.columns(3)
     with col_scan:
         if st.button("📷\nSCANNER\nPLEIN ECRAN", use_container_width=True, key="scanner_toggle"):
@@ -490,20 +522,21 @@ if menu=="Home":
         if st.button("🎮\nJEUX", use_container_width=True, key="quick_jeux_top"):
             st.session_state.selected_menu="Jeux"; st.rerun()
 
-    st.markdown("### 📤 Partager l'app - Blockchain")
-    share_text = urllib.parse.quote(f"Découvre Scanner Halal Blockchain - historique immuable {APP_LINK}")
-    wa_link = f"https://wa.me/?text={share_text}"
-    fb_link = f"https://www.facebook.com/sharer/sharer.php?u={urllib.parse.quote(APP_LINK)}"
-    c1,c2,c3=st.columns(3)
-    with c1: st.link_button("🟢 WhatsApp", wa_link, use_container_width=True)
-    with c2: st.link_button("🔵 Facebook", fb_link, use_container_width=True)
-    with c3:
-        st.components.v1.html(f"""<button onclick="if(navigator.share){{navigator.share({{title:'Scanner Halal Blockchain',text:'Historique blockchain',url:'{APP_LINK}'}})}}else{{navigator.clipboard.writeText('{APP_LINK}'); alert('Lien copié!');}}" style="width:100%; background:white; border:2px solid #eef2ff; border-radius:18px; padding:12px; font-weight:800; color:#0a2a6b">📱 Partager</button>""", height=60)
+    st.markdown("### 📤 Partager l'app")
+    share_text = urllib.parse.quote(f"Découvre Scanner Halal - historique immuable {APP_LINK}")
+    share_url = urllib.parse.quote(APP_LINK)
+    with st.popover("📤 Partager", use_container_width=True):
+        st.markdown("**Partager sur :**")
+        st.link_button("🟢 WhatsApp", f"https://wa.me/?text={share_text}", use_container_width=True)
+        st.link_button("🔵 Facebook", f"https://www.facebook.com/sharer/sharer.php?u={share_url}", use_container_width=True)
+        st.link_button("🟣 Instagram", "https://www.instagram.com/", use_container_width=True)
+        st.caption("Clique, tu seras redirigé automatiquement")
+
     if not user.get('is_vip'):
         st.link_button("💎 Passer VIP 1500F ILLIMITÉ - Blockchain", WAVE_LINK, type="primary", use_container_width=True)
 
 elif menu=="Coran":
-    if st.button("⬅️ Retour Coran", key="back_coran"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️ Retour", key="back_coran"): st.session_state.bottom_nav="Home"; st.rerun()
     st.markdown("""<div style="background:linear-gradient(135deg,#00a651,#00c853); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📖⛓️</div><div style="font-weight:900; font-size:20px">CORAN 114 - BLOCKCHAIN</div></div>""", unsafe_allow_html=True)
     st.markdown("### 📥 Téléchargements Coran")
     cdl1, cdl2 = st.columns(2)
@@ -519,7 +552,7 @@ elif menu=="Coran":
     base_url = RECITATEURS[recitateur_nom]
     if st.session_state.selected_sourate:
         s_num = st.session_state.selected_sourate; s_nom = SOURATES_NOMS[s_num-1]; audio_url = f"{base_url}{s_num}.mp3"
-        if st.button("⬅️ Retour liste", key="back_sourate_list"):
+        if st.button("⬅️ Retour", key="back_sourate_list"):
             st.session_state.selected_sourate = None; st.rerun()
         st.markdown(f"""<div style="background:white; border-radius:20px; padding:20px; border:3px solid #00a651; text-align:center"><div style="font-size:60px">📖</div><div style="font-weight:900; font-size:22px; color:#0a2a6b">{s_num}. {s_nom}</div></div>""", unsafe_allow_html=True)
         st.audio(audio_url, format="audio/mp3")
@@ -539,7 +572,7 @@ elif menu=="Coran":
             with c3: st.link_button("📥", f"{RECITATEURS[recitateur_nom]}{i}.mp3", use_container_width=True)
 
 elif menu=="Jeux":
-    if st.button("⬅️ Retour Jeux", key="back_jeux"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️ Retour", key="back_jeux"): st.session_state.bottom_nav="Home"; st.rerun()
     st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">🎮⛓️</div><div style="font-weight:900">JEUX ISLAMIQUES BLOCKCHAIN</div><div style="font-size:11px; color:#00ff88">Chaque téléchargement = 1 bloc</div></div>""", unsafe_allow_html=True)
     st.markdown("### 📥 Télécharger pour jouer offline")
     d1,d2 = st.columns(2)
@@ -568,7 +601,7 @@ elif menu=="Hadiths":
     if not user.get('is_vip'):
         st.markdown("""<div class="card-vip"><div style="font-size:70px">🔒</div><div style="font-weight:900; color:gold">Hadiths VIP - CODE requis</div></div>""", unsafe_allow_html=True)
         st.link_button("💳 PAYER 1500F POUR CODE", WAVE_LINK, type="primary", use_container_width=True); st.stop()
-    if st.button("⬅️ Retour Hadiths", key="back_hadith"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️ Retour", key="back_hadith"): st.session_state.bottom_nav="Home"; st.rerun()
     st.markdown("""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white"><div style="font-size:50px">📜</div><div style="font-weight:900">40 HADITHS NAWAWI</div></div>""", unsafe_allow_html=True)
     if st.session_state.selected_hadith:
         h = st.session_state.selected_hadith
@@ -586,7 +619,7 @@ elif menu=="Aliments":
     if not user.get('is_vip'):
         st.markdown("""<div class="card-vip"><div style="font-size:70px">🔒</div><div style="font-weight:900; color:gold">Aliments VIP - CODE requis</div></div>""", unsafe_allow_html=True)
         st.link_button("💳 PAYER 1500F POUR CODE", WAVE_LINK, type="primary", use_container_width=True); st.stop()
-    if st.button("⬅️ Retour Aliments", key="back_alim"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️ Retour", key="back_alim"): st.session_state.bottom_nav="Home"; st.rerun()
     search = st.text_input("🔍 Cherche aliment", placeholder="Ex: porc, poulet...")
     for a in ALIMENTS_DATA:
         if search.lower() in a['nom'].lower() or not search:
@@ -596,7 +629,7 @@ elif menu=="Douas":
     if not user.get('is_vip'):
         st.markdown("""<div class="card-vip"><div style="font-size:70px">🔒</div><div style="font-weight:900; color:gold">Douas VIP - CODE requis</div></div>""", unsafe_allow_html=True)
         st.link_button("💳 PAYER 1500F POUR CODE", WAVE_LINK, type="primary", use_container_width=True); st.stop()
-    if st.button("⬅️ Retour Douas", key="back_douas"): st.session_state.bottom_nav="Home"; st.rerun()
+    if st.button("⬅️ Retour", key="back_douas"): st.session_state.bottom_nav="Home"; st.rerun()
     st.title("🤲 50 Douas")
     st.markdown("<div class='card-graph'>Bismillah - Au nom d'Allah<br>Alhamdulillah - Louange à Allah<br>SubhanAllah - Gloire à Allah</div>", unsafe_allow_html=True)
 
@@ -609,7 +642,7 @@ elif menu=="Parametres":
     used_kb = len(json.dumps(users).encode())/1024 + len(json.dumps(chain).encode())/1024
     st.markdown(f"""<div class='card-graph' style='text-align:left; font-size:12px'>💾 Mémoire users.json + blockchain: {used_kb:.1f} KB<br>🖼️ Réservé photo profil: <b>2,5 Mo (2560 KB)</b><br>📸 Photo actuelle: {(len(profile_b64 or '')/1024):.1f} KB thumbnail<br>⛓️ Total blocs: {len(chain)}<br>📜 Tes scans: {len(user.get('history',[]))} | 📥 Tes DL: {len(user.get('history_downloads',[]))}<br>🖼️ Icône APK: logo.png -> {logo_for_manifest} | Existe: {logo_exists_local}</div>""", unsafe_allow_html=True)
     if os.path.exists("static/logo.png"):
-        st.image("static/logo.png", caption="Logo actuel pour APK - logo.png - Nouveau logo or", width=150)
+        st.image("static/logo.png", caption="Logo APK", width=150)
     c1,c2,c3 = st.columns(3)
     with c1:
         if st.button("🗑️ Vider 2,5 Mo", use_container_width=True):
@@ -625,23 +658,25 @@ elif menu=="Parametres":
     with c3:
         if st.button("🗑️ Vider DL", use_container_width=True):
             users[user_email]['history_downloads']=[]; save_json(USERS_FILE,users); st.rerun()
-    st.subheader("⛓️ Historique Blockchain - Mode Blochen")
-    st.markdown("<div style='font-size:11px; color:gray'>Chaque action = 1 bloc avec hash SHA256 + previous_hash - immuable</div>", unsafe_allow_html=True)
+    st.subheader("⛓️ Historique Blockchain")
     for block in reversed(chain[-30:]):
         if block["data"].get("user")==user_email or block["data"].get("user")=="system" or block["index"]==0:
             st.markdown(f"""<div class='block-blockchain'><b style='color:gold'>Bloc #{block['index']}</b> | {block['timestamp'][:19]}<br>Prev: {block['previous_hash'][:16]}...<br>Hash: <span style='color:#00ff88'>{block['hash']}</span><br>Data: {json.dumps(block['data'], ensure_ascii=False)[:150]}</div>""", unsafe_allow_html=True)
-    st.subheader("📜 Historique Scans Classique")
+    st.subheader("📜 Historique Scans")
     if not user.get('history'): st.info("Aucun scan")
     else:
         for h in reversed(user['history'][-20:]):
             st.markdown(f"<div class='card-graph' style='text-align:left; font-size:12px'>{h['date']} - <b>{h['result']}</b></div>", unsafe_allow_html=True)
-    st.subheader("📥 Historique Téléchargements Coran & Jeux")
+    st.subheader("📥 Historique Téléchargements")
     if not user.get('history_downloads'): st.info("Aucun téléchargement")
     else:
         for d in reversed(user['history_downloads'][-20:]):
             st.markdown(f"<div class='card-graph' style='text-align:left; font-size:12px'>📥 {d['date']} - {d['name']}</div>", unsafe_allow_html=True)
-    st.subheader("📤 Partager Blockchain")
-    share_text = urllib.parse.quote(f"Scanner Halal Blockchain {APP_LINK}")
-    st.link_button("🟢 WhatsApp", f"https://wa.me/?text={share_text}", use_container_width=True)
-    st.link_button("🔵 Facebook", f"https://www.facebook.com/sharer/sharer.php?u={urllib.parse.quote(APP_LINK)}", use_container_width=True)
-    st.link_button("📲 Installer l'App (APK)", APP_LINK, use_container_width=True, type="primary")
+    st.subheader("📤 Partager")
+    share_text = urllib.parse.quote(f"Scanner Halal {APP_LINK}")
+    with st.popover("📤 Partager", use_container_width=True):
+        st.link_button("🟢 WhatsApp", f"https://wa.me/?text={share_text}", use_container_width=True)
+        st.link_button("🔵 Facebook", f"https://www.facebook.com/sharer/sharer.php?u={urllib.parse.quote(APP_LINK)}", use_container_width=True)
+        st.link_button("🟣 Instagram", "https://www.instagram.com/", use_container_width=True)
+
+st.markdown("<div style='height:150px'></div>", unsafe_allow_html=True)
