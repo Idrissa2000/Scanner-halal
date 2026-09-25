@@ -66,7 +66,7 @@ def get_logo_b64():
     except: return None
     return None
 logo_b64=get_logo_b64()
-st.set_page_config(page_title="Scanner Halal Pro",page_icon="📱",layout="centered")
+st.set_page_config(page_title="Scanner Halal final Pro",page_icon="📱",layout="centered")
 st.markdown("""<style>#MainMenu{visibility:hidden} footer{visibility:hidden} header{visibility:hidden} .block-container{padding-top:10px; padding-bottom:130px;} .card-graph{background:white; border-radius:18px; padding:18px; text-align:center; border:2px solid #eef2ff; box-shadow:0 6px 15px rgba(0,0,0,0.07); margin:8px 0} .card-vip{background:linear-gradient(135deg,#0a2a6b,#1a4bb8);color:white;padding:25px;border-radius:20px;margin:12px 0px; text-align:center} .progress-bar{background:#eef2ff; border-radius:10px; height:12px; overflow:hidden; margin:8px 0} .progress-fill{background:linear-gradient(90deg,#00a651,#0a2a6b); height:100%;} div[data-testid="stButton"] > button {border-radius:18px!important; padding:14px!important; font-weight:800!important;}</style>""",unsafe_allow_html=True)
 
 for k in ['user','page','current_view','current_game_q','game_question_count','game_correct','last_answer','game_niveau','is_guest','game_attempts','profile_icon','scan_count_premium','notif_enabled','langue','reset_code']:
