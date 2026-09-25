@@ -1,85 +1,57 @@
+
 import streamlit as st
-import json, os, random, re, base64, time, urllib.parse, io, hashlib, shutil, socket
+import json, os, random, re, base64, time, urllib.parse, io, hashlib, shutil, socket, requests
 from datetime import datetime
 from PIL import Image
 
 WAVE_LINK="https://pay.wave.com/m/M_ci_bqKBEWPbP0OO/c/ci/?amount=1500"
-MONETAG_LINK="https://omg10.com/4/11717935"
 APP_LINK="https://scanner-halal-mbcyfmxur68mw8n9zd72ul.streamlit.app"
+
+# VRAIE PUB MONETAG - Config propre
+MONETAG_VERIFICATION = "f0709f9a10f74ee6fb7079df869c45ad"
+REAL_PUB_ZONE_ID = "11717935"
+MONETAG_LINK = f"https://otieu.com/4/{REAL_PUB_ZONE_ID}"  # vrai domaine Monetag
+REAL_PUB_LINK = MONETAG_LINK
+
 USERS_FILE="users.json"; VIP_CODES_FILE="vip_codes.json"; BLOCKCHAIN_FILE="blockchain_history.json"
 PROFILE_ICONS=["🧕","👳‍♂️","👨‍🦳","🧔","👩‍🦱","👨‍🦲","👳‍♀️","👩‍⚕️","🧑‍🎓","👨"]
 LECTEURS_CORAN=["Mishary Alafasy","Abdul Rahman Al-Sudais","Maher Al-Muaiqly","Saad Al-Ghamdi","Yasser Al-Dosari","Ahmed Al-Ajmi","Abdullah Al-Juhany","Salah Al-Budair","Abu Bakr Al-Shatri","Nasser Al-Qatami"]
-JEUX_ISLAMIQUES=[{"nom":"Quiz Coran","desc":"Testez vos connaissances","taille":"12 Mo"},{"nom":"Puzzle Kaaba","desc":"Reconstituez la Kaaba","taille":"18 Mo"},{"nom":"Mots Islamiques","desc":"Jeu de mots arabe","taille":"8 Mo"},{"nom":"Course Halal","desc":"Evitez le Haram","taille":"25 Mo"},{"nom":"Mémoire Hadith","desc":"Mémorisez 40 Hadiths","taille":"10 Mo"},{"nom":"Labyrinthe Hajj","desc":"Guidez le pèlerin","taille":"15 Mo"}]
 
-os.makedirs("profile_pics",exist_ok=True); os.makedirs("static",exist_ok=True)
-if os.path.exists("logo.png"):
-    try: shutil.copyfile("logo.png","static/logo.png")
-    except: pass
+# Mapping vrai lecteur -> API Quran
+LECTEURS_MAP={
+    "Mishary Alafasy":"ar.alafasy",
+    "Abdul Rahman Al-Sudais":"ar.abdurrahmaansudais",
+    "Maher Al-Muaiqly":"ar.mahermuaiqly",
+    "Saad Al-Ghamdi":"ar.saadalghamdi",
+    "Yasser Al-Dosari":"ar.yasseraldosari",
+    "Ahmed Al-Ajmi":"ar.ahmedajamy",
+    "Abdullah Al-Juhany":"ar.abdullahaljuhany",
+    "Salah Al-Budair":"ar.salahbudair",
+    "Abu Bakr Al-Shatri":"ar.abubakr",
+    "Nasser Al-Qatami":"ar.nasserqatami"
+}
 
-manifest={"name":"Scanner Halal Blockchain","short_name":"Halal Scan","description":"Scanner Halal","start_url":"/","display":"standalone","background_color":"#0a2a6b","theme_color":"#0a2a6b","orientation":"portrait","icons":[{"src":"https://scanner-halal-mbcyfmxur68mw8n9zd72ul.streamlit.app/app/static/logo.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"https://scanner-halal-mbcyfmxur68mw8n9zd72ul.streamlit.app/app/static/logo.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
-with open("static/manifest.json","w",encoding="utf-8") as f: json.dump(manifest,f,indent=2)
-with open("static/sw.js","w") as f: f.write('self.addEventListener("install", e=>{e.waitUntil(caches.open("halal-final-pro").then(c=>c.addAll(["/"])))});self.addEventListener("fetch", e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})')
+def get_quran_audio_url(lecteur, sourate_num):
+    edition = LECTEURS_MAP.get(lecteur, "ar.alafasy")
+    # API islamic.network - vrai audio Coran
+    return f"https://cdn.islamic.network/quran/audio-surah/128/{edition}/{sourate_num}.mp3"
 
-def calculate_hash(i,t,d,p): import hashlib, json; return hashlib.sha256(f"{i}{t}{json.dumps(d,sort_keys=True,ensure_ascii=False)}{p}".encode()).hexdigest()
-def load_blockchain():
-    if os.path.exists(BLOCKCHAIN_FILE):
-        try:
-            with open(BLOCKCHAIN_FILE,'r',encoding='utf-8') as fp: return json.load(fp)
-        except: pass
-    g={"index":0,"timestamp":datetime.now().isoformat(),"data":{"type":"GENESIS","message":"Scanner Halal Final Pro","user":"system"},"previous_hash":"0"*64,"hash":""}; g["hash"]=calculate_hash(g["index"],g["timestamp"],g["data"],g["previous_hash"]); return [g]
-def save_blockchain(c):
-    with open(BLOCKCHAIN_FILE,'w',encoding='utf-8') as fp: json.dump(c,fp,ensure_ascii=False,indent=2)
-def add_block(data):
-    ch=load_blockchain(); last=ch[-1]; nb={"index":len(ch),"timestamp":datetime.now().isoformat(),"data":data,"previous_hash":last["hash"],"hash":""}; nb["hash"]=calculate_hash(nb["index"],nb["timestamp"],nb["data"],nb["previous_hash"]); ch.append(nb); save_blockchain(ch); return nb
-def verify_blockchain():
-    ch=load_blockchain()
-    for i in range(1,len(ch)):
-        curr=ch[i]; prev=ch[i-1]
-        if curr["previous_hash"]!=prev["hash"]: return False,f"Bloc {i} corrompu"
-        import hashlib, json; recalc=hashlib.sha256(f"{curr['index']}{curr['timestamp']}{json.dumps(curr['data'],sort_keys=True,ensure_ascii=False)}{curr['previous_hash']}".encode()).hexdigest()
-        if curr["hash"]!=recalc: return False,f"Hash bloc {i} invalide"
-    return True,f"Blockchain valide {len(ch)} blocs"
-def load_json(f,d):
-    if os.path.exists(f):
-        try:
-            with open(f,'r',encoding='utf-8') as fp: return json.load(fp)
-        except: return d
-    return d
-def save_json(f,data):
-    with open(f,'w',encoding='utf-8') as fp: json.dump(data,fp,ensure_ascii=False,indent=2)
-if not os.path.exists(VIP_CODES_FILE):
-    codes={f"VIP-{random.randint(1000,9999)}-{random.randint(1000,9999)}":{"used":False,"used_by":None} for _ in range(20)}; codes["VIP-2026-TEST"]={"used":False,"used_by":None}; save_json(VIP_CODES_FILE,codes)
-vip_codes=load_json(VIP_CODES_FILE,{})
-def check_internet():
-    try: socket.create_connection(("8.8.8.8",53),timeout=3); return True
-    except:
-        try: socket.create_connection(("1.1.1.1",53),timeout=3); return True
-        except: return False
-def is_scanner_allowed(is_guest):
-    if is_guest: return False,"Connexion requise pour scanner"
-    if not check_internet(): return False,"Pas de connexion internet"
-    return True,"Autorise"
+def pub_button():
+    # VRAIE PUB - discret, conforme policy Monetag, pas de faux bouton PUB orange
+    st.markdown(f"""
+    <div style='position:fixed; bottom:0; left:0; right:0; background:linear-gradient(90deg,#0a2a6b,#1a4bb8); padding:8px; text-align:center; z-index:9999; border-top:2px solid gold'>
+        <span style='color:white; font-size:11px;'>📖 Scanner Halal • 100% Gratuit • </span>
+        <a href='{APP_LINK}' target='_blank' style='color:gold; text-decoration:none; font-weight:800; font-size:12px;'>Partager</a>
+        <span style='color:white; font-size:11px; margin-left:10px; opacity:0.7;'>| Pub Halal</span>
+    </div>
+    <!-- VRAI SCRIPT MONETAG - Mettre ce script dans ton index.html si tu utilises HTML, pas Streamlit -->
+    <!-- <meta name="monetag" content="{MONETAG_VERIFICATION}"> -->
+    <!-- <script src="https://fpyf8.com/88/tag.min.js" data-zone="{REAL_PUB_ZONE_ID}" async></script> -->
+    """, unsafe_allow_html=True)
 
-HALAL_BASE=["Poulet Halal","Boeuf Halal","Mouton Halal","Dinde Halal","Canard Halal","Riz Basmati","Ble Complet","Dattes Ajwa","Miel Pur","Lait Vache","Oeuf Poule","Pain Complet","Huile Olive","Lentilles","Mangue","Banane","Pomme","Tomate","Eau Zamzam"]
-HARAM_BASE=["Porc","Jambon Porc","Bacon","Sang Animal","Boudin Noir","Vin Rouge","Biere","Whisky","Gelatine Porcine E441","E120 Cochenille","Chips Bacon","Vanille Alcool","Saucisson Porc","Mortadelle Porc","Pizza Pepperoni Porc"]
-DOUTEUX_BASE=["E422 Glycerol","E471 Mono Diglyceride","E472 Emulsifiant","Arome Naturel Inconnu","Gelatine Transformee Istihala","Viande Supermarche","Fromage Presure Douteuse","Sucre Raffine Os"]
-
-def build_1000():
-    aliments=[]
-    for i in range(400):
-        base=HALAL_BASE[i%len(HALAL_BASE)]; nom=f"{base} {i+1}" if i>=len(HALAL_BASE) else base
-        aliments.append({"nom":nom,"statut":"HALAL","icon":"✅","desc":"Halal certifie","niveau":1 if i<200 else 2 if i<300 else 3,"detail":f"{nom} est Halal selon Coran 6:118. Hadith 13: Halal clair."})
-    for i in range(400):
-        base=HARAM_BASE[i%len(HARAM_BASE)]; nom=f"{base} {i+1}" if i>=len(HARAM_BASE) else base
-        aliments.append({"nom":nom,"statut":"HARAM","icon":"🚫","desc":"HARAM Interdit","niveau":1 if i<200 else 2 if i<300 else 3,"detail":f"{nom} est HARAM Coran 2:173."})
-    for i in range(200):
-        base=DOUTEUX_BASE[i%len(DOUTEUX_BASE)]; nom=f"{base} {i+1}" if i>=len(DOUTEUX_BASE) else base
-        aliments.append({"nom":nom,"statut":"DOUTEUX","icon":"⚠️","desc":"DOUTEUX Verifier","niveau":2 if i<100 else 3,"detail":f"{nom} est DOUTEUX. Laisser douteux."})
-    return aliments
-ALIMENTS_DATA=build_1000()
-HADITHS=[{"id":i,"ar":f"حديث {i}","fr":f"Hadith {i} authentique - Bukhari & Muslim"} for i in range(1,41)]
-DOUAS=[{"id":i,"type":"quotidien" if i<=30 else "qounout","ar":f"دعاء {i}","fr":f"Doua {i} - Quotidien" if i<=30 else f"Doua Qounout {i}"} for i in range(1,51)]
 SOURATES=["Al-Fatiha","Al-Baqara","Al-Imran","An-Nisa","Al-Maida","Al-Anam","Al-Araf","Al-Anfal","At-Tawba","Yunus","Hud","Yusuf","Ar-Rad","Ibrahim","Al-Hijr","An-Nahl","Al-Isra","Al-Kahf","Maryam","Ta-Ha","Al-Anbiya","Al-Hajj","Al-Muminun","An-Nur","Al-Furqan","Ash-Shuara","An-Naml","Al-Qasas","Al-Ankabut","Ar-Rum","Luqman","As-Sajda","Al-Ahzab","Saba","Fatir","Ya-Sin","As-Saffat","Sad","Az-Zumar","Ghafir","Fussilat","Ash-Shura","Az-Zukhruf","Ad-Dukhan","Al-Jathiya","Al-Ahqaf","Muhammad","Al-Fath","Al-Hujurat","Qaf","Adh-Dhariyat","At-Tur","An-Najm","Al-Qamar","Ar-Rahman","Al-Waqia","Al-Hadid","Al-Mujadila","Al-Hashr","Al-Mumtahana","As-Saff","Al-Jumua","Al-Munafiqun","At-Taghabun","At-Talaq","At-Tahrim","Al-Mulk","Al-Qalam","Al-Haqqa","Al-Maarij","Nuh","Al-Jinn","Al-Muzzammil","Al-Muddathir","Al-Qiyama","Al-Insan","Al-Mursalat","An-Naba","An-Naziat","Abasa","At-Takwir","Al-Infitar","Al-Mutaffifin","Al-Inshiqaq","Al-Buruj","At-Tariq","Al-Ala","Al-Ghashiya","Al-Fajr","Al-Balad","Ash-Shams","Al-Lail","Ad-Duha","Ash-Sharh","At-Tin","Al-Alaq","Al-Qadr","Al-Bayyina","Az-Zalzala","Al-Adiyat","Al-Qaria","At-Takathur","Al-Asr","Al-Humaza","Al-Fil","Quraysh","Al-Maun","Al-Kawthar","Al-Kafirun","An-Nasr","Al-Masad","Al-Ikhlas","Al-Falaq","An-Nas"]
+
+Al-Fatiha","Al-Baqara","Al-Imran","An-Nisa","Al-Maida","Al-Anam","Al-Araf","Al-Anfal","At-Tawba","Yunus","Hud","Yusuf","Ar-Rad","Ibrahim","Al-Hijr","An-Nahl","Al-Isra","Al-Kahf","Maryam","Ta-Ha","Al-Anbiya","Al-Hajj","Al-Muminun","An-Nur","Al-Furqan","Ash-Shuara","An-Naml","Al-Qasas","Al-Ankabut","Ar-Rum","Luqman","As-Sajda","Al-Ahzab","Saba","Fatir","Ya-Sin","As-Saffat","Sad","Az-Zumar","Ghafir","Fussilat","Ash-Shura","Az-Zukhruf","Ad-Dukhan","Al-Jathiya","Al-Ahqaf","Muhammad","Al-Fath","Al-Hujurat","Qaf","Adh-Dhariyat","At-Tur","An-Najm","Al-Qamar","Ar-Rahman","Al-Waqia","Al-Hadid","Al-Mujadila","Al-Hashr","Al-Mumtahana","As-Saff","Al-Jumua","Al-Munafiqun","At-Taghabun","At-Talaq","At-Tahrim","Al-Mulk","Al-Qalam","Al-Haqqa","Al-Maarij","Nuh","Al-Jinn","Al-Muzzammil","Al-Muddathir","Al-Qiyama","Al-Insan","Al-Mursalat","An-Naba","An-Naziat","Abasa","At-Takwir","Al-Infitar","Al-Mutaffifin","Al-Inshiqaq","Al-Buruj","At-Tariq","Al-Ala","Al-Ghashiya","Al-Fajr","Al-Balad","Ash-Shams","Al-Lail","Ad-Duha","Ash-Sharh","At-Tin","Al-Alaq","Al-Qadr","Al-Bayyina","Az-Zalzala","Al-Adiyat","Al-Qaria","At-Takathur","Al-Asr","Al-Humaza","Al-Fil","Quraysh","Al-Maun","Al-Kawthar","Al-Kafirun","An-Nasr","Al-Masad","Al-Ikhlas","Al-Falaq","An-Nas"]
 
 def is_valid_pwd(p): return len(p)>=6 and re.search(r"[A-Za-z]",p) and re.search(r"[0-9]",p)
 def extract_code(t):
@@ -94,7 +66,7 @@ def get_logo_b64():
     except: return None
     return None
 logo_b64=get_logo_b64()
-st.set_page_config(page_title="Scanner Halal Final Pro",page_icon="📱",layout="centered")
+st.set_page_config(page_title="Scanner Halal Pro",page_icon="📱",layout="centered")
 st.markdown("""<style>#MainMenu{visibility:hidden} footer{visibility:hidden} header{visibility:hidden} .block-container{padding-top:10px; padding-bottom:130px;} .card-graph{background:white; border-radius:18px; padding:18px; text-align:center; border:2px solid #eef2ff; box-shadow:0 6px 15px rgba(0,0,0,0.07); margin:8px 0} .card-vip{background:linear-gradient(135deg,#0a2a6b,#1a4bb8);color:white;padding:25px;border-radius:20px;margin:12px 0px; text-align:center} .progress-bar{background:#eef2ff; border-radius:10px; height:12px; overflow:hidden; margin:8px 0} .progress-fill{background:linear-gradient(90deg,#00a651,#0a2a6b); height:100%;} div[data-testid="stButton"] > button {border-radius:18px!important; padding:14px!important; font-weight:800!important;}</style>""",unsafe_allow_html=True)
 
 for k in ['user','page','current_view','current_game_q','game_question_count','game_correct','last_answer','game_niveau','is_guest','game_attempts','profile_icon','scan_count_premium','notif_enabled','langue','reset_code']:
@@ -114,7 +86,7 @@ for k in ['user','page','current_view','current_game_q','game_question_count','g
         else: st.session_state[k]=None
 
 def pub_button():
-    st.markdown(f"""<div style='position:fixed; bottom:0; left:0; right:0; background:linear-gradient(90deg,#ff8c00,#ff5500); padding:10px; text-align:center; z-index:9999; border-radius:18px 18px 0 0'><a href='{MONETAG_LINK}' target='_blank' style='background:white; color:#ff5500; padding:10px 30px; border-radius:20px; font-weight:900; text-decoration:none; display:inline-block'>📢 PUB</a></div>""",unsafe_allow_html=True)
+    st.markdown(f"""<div style='position:fixed; bottom:0; left:0; right:0; background:linear-gradient(90deg,,); padding:10px; text-align:center; z-index:9999; border-radius:18px 18px 0 0'><a href='{MONETAG_LINK}' target='_blank' style='background:white; color:; padding:10px 30px; border-radius:20px; font-weight:900; text-decoration:none; display:inline-block'>📢 PUB</a></div>""",unsafe_allow_html=True)
 
 if st.session_state.page=="auth":
     if logo_b64: st.markdown(f"""<div style="background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:20px; padding:25px; text-align:center; color:white"><img src="data:image/png;base64,{logo_b64}" style="width:110px;height:110px;border-radius:20px;object-fit:cover;border:3px solid gold"><div style="font-size:24px; font-weight:900; margin-top:12px">SCANNER HALAL</div><div style="font-size:12px; color:gold">1000 Aliments - Blockchain - Final Pro</div></div>""",unsafe_allow_html=True)
@@ -323,54 +295,74 @@ if st.session_state.current_view=="savoir":
     if st.button("← Retour",use_container_width=True):
         st.session_state.current_view="home"
         st.rerun()
-    st.markdown("<div class='card-graph'><b>📚 SAVOIR - 1000 Aliments + Coran + Hadiths + Douas</b></div>",unsafe_allow_html=True)
-    ta,tb,tc,td=st.tabs(["🍽️ Aliments (1000)","📖 Coran","📜 Hadiths","🤲 Douas (50)"])
-    with ta:
-        s=st.text_input("Rechercher"); f=st.selectbox("Filtrer",["Tous","HALAL","HARAM","DOUTEUX"])
-        filt=ALIMENTS_DATA
-        if f!="Tous": filt=[a for a in filt if a['statut']==f]
-        if s: filt=[a for a in filt if s.lower() in a['nom'].lower()]
-        st.write(f"{len(filt)} aliments"); pg=st.number_input("Page",1,max(1,len(filt)//20+1),1); stt=(pg-1)*20
-        for a in filt[stt:stt+20]:
-            with st.expander(f"{a['icon']} {a['nom']} - {a['statut']}"): st.write(a['detail'])
-    with tb:
-        st.subheader("Coran - 10 Lecteurs avant telechargement")
-        lect=st.selectbox("10 Lecteurs",LECTEURS_CORAN)
-        sel=st.selectbox("Sourate",SOURATES[:30])
-        if st.button(f"📥 Télécharger {sel} - {lect}",type="primary",use_container_width=True): st.success(f"✅ {sel} - {lect} téléchargé dans l'appli")
-        for h in range(1,6): st.markdown(f"<div class='card-graph' style='text-align:left'>{h}. {SOURATES[h-1]}</div>",unsafe_allow_html=True)
-    with tc:
-        col=st.selectbox("Collection",["40 Hadiths Nawawi","Boukhari Complet","Muslim Complet","Riyad Salihin"])
-        if st.button(f"📥 Télécharger {col}",type="primary",use_container_width=True): st.success(f"✅ {col} téléchargé!")
-        for h in HADITHS[:10]:
-            with st.expander(f"Hadith {h['id']}"): st.write(h['fr'])
-    with td:
-        typ=st.selectbox("Type",["Toutes (50)","Quotidiennes (30)","Qounout (20)"])
-        flt=DOUAS
-        if typ=="Quotidiennes (30)": flt=[d for d in DOUAS if d['type']=='quotidien']
-        elif typ=="Qounout (20)": flt=[d for d in DOUAS if d['type']=='qounout']
-        if st.button(f"📥 Télécharger {len(flt)} Douas audio",type="primary",use_container_width=True): st.success(f"✅ {len(flt)} Douas téléchargées!")
-        for d in flt[:20]:
-            with st.expander(f"{d['id']}. {d['ar']}"): st.write(d['fr'])
+    st.markdown("<div class='card-graph'><b>📖 CORAN - 10 Lecteurs - VRAIS AUDIOS</b></div>",unsafe_allow_html=True)
+    
+    col1,col2 = st.columns(2)
+    with col1:
+        lect=st.selectbox("🎙️ 10 Lecteurs",LECTEURS_CORAN, key="lecteur_real")
+    with col2:
+        sel=st.selectbox("📖 114 Sourates",SOURATES, key="sourate_real")
+    
+    sourate_num = SOURATES.index(sel)+1
+    audio_url = get_quran_audio_url(lect, sourate_num)
+    
+    st.markdown(f"**{sel} - {lect} - Sourate {sourate_num}**")
+    
+    # VRAI BOUTON 1 : ECOUTER (vrai audio)
+    st.audio(audio_url, format="audio/mp3")
+    
+    c1,c2 = st.columns(2)
+    with c1:
+        # VRAI BOUTON 2 : TELECHARGER (vrai fichier mp3)
+        st.link_button(f"📥 Télécharger {sel}", audio_url, use_container_width=True)
+    with c2:
+        # VRAI BOUTON 3 : PARTAGER
+        share_text = f"Ecoute {sel} par {lect} sur Scanner Halal {APP_LINK}"
+        enc = urllib.parse.quote(share_text)
+        st.link_button("📤 Partager WhatsApp", f"https://wa.me/?text={enc}", use_container_width=True)
+    
+    if st.button("✅ Confirmer téléchargement dans mon historique", type="primary", use_container_width=True):
+        if not is_guest_mode:
+            users[user_email].get('history_downloads', []).append(f"{sel} - {lect} - {datetime.now().strftime('%d/%m %H:%M')}")
+            save_json(USERS_FILE, users)
+            add_block({"type":"CORAN_DOWNLOAD","user":user_email,"sourate":sel,"lecteur":lect})
+        st.success(f"✅ {sel} par {lect} ajouté à ton historique - Vrai audio: {audio_url}")
+        st.balloons()
+    
+    st.markdown("---")
+    st.markdown("**📚 Toutes les Sourates - Vrais boutons**")
+    search = st.text_input("🔍 Rechercher", key="search_sourate_real")
+    filt = [s for s in SOURATES if search.lower() in s.lower()] if search else SOURATES
+    
+    for i, s in enumerate(filt[:50]):
+        num = SOURATES.index(s)+1
+        url = get_quran_audio_url(lect, num)
+        with st.expander(f"{num}. {s}"):
+            st.audio(url)
+            st.link_button(f"📥 Télécharger {s}", url, key=f"dl_{num}")
+    
     pub_button(); st.stop()
+
 
 if st.session_state.current_view=="jeux":
     if st.button("← Retour",use_container_width=True):
         st.session_state.current_view="home"
         st.rerun()
-    st.markdown("""<div style='background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white'><b>🎮 JEUX - Sondage 3 choix + Jeux DL</b></div>""",unsafe_allow_html=True)
-    t1,t2=st.tabs(["📝 Sondage","🎮 Jeux Islamiques"])
-    with t1:
-        if st.session_state.game_question_count>=20:
-            note=st.session_state.game_correct; st.session_state.game_attempts+=1
-            if st.session_state.game_attempts>=15: st.balloons(); st.markdown(f"<div class='card-graph'><b>🏆 BOUCLE 15 ESSAIS TERMINEE!</b><br>{note}/20 - Recommence!</div>",unsafe_allow_html=True); st.session_state.game_attempts=0
-            else: st.markdown(f"<div class='card-graph'><b>QUIZ TERMINE!</b><br><span style='font-size:40px'>{note}/20</span><br>Essai {st.session_state.game_attempts}/15</div>",unsafe_allow_html=True)
-            c1,c2=st.columns(2)
-            with c1:
-                if st.button("🔄 Reessayer - Questions differentes",type="primary",use_container_width=True): st.session_state.game_question_count=0; st.session_state.game_correct=0; st.session_state.current_game_q=random.choice(ALIMENTS_DATA); st.rerun()
-            with c2:
-                if st.button("🏠 Retour",use_container_width=True): st.session_state.game_question_count=0; st.session_state.game_correct=0; st.session_state.current_view="home"; st.rerun()
-            pub_button(); st.stop()
+    st.markdown("""<div style='background:linear-gradient(135deg,#0a2a6b,#1a4bb8); border-radius:18px; padding:18px; text-align:center; color:white'><b>🎮 JEUX - Vrais Quiz Halal</b></div>""",unsafe_allow_html=True)
+    q=st.session_state.current_game_q; prog=int(st.session_state.game_question_count/20*100)
+    st.markdown(f"<div class='card-graph'>Q {st.session_state.game_question_count+1}/20 | Score {st.session_state.game_correct}/20<br><div class='progress-bar'><div class='progress-fill' style='width:{prog}%'></div></div><br><b>{q['icon']} {q['nom']}</b><br><b>HALAL / HARAM / DOUTEUX ?</b></div>",unsafe_allow_html=True)
+    c1,c2,c3=st.columns(3)
+    with c1:
+        if st.button("✅ HALAL",use_container_width=True,key="h1_real"): 
+            ok=q['statut']=="HALAL"; st.session_state.game_correct+=1 if ok else 0; st.session_state.game_question_count+=1; st.session_state.current_game_q=random.choice(ALIMENTS_DATA); st.rerun()
+    with c2:
+        if st.button("🚫 HARAM",use_container_width=True,key="h2_real"): 
+            ok=q['statut']=="HARAM"; st.session_state.game_correct+=1 if ok else 0; st.session_state.game_question_count+=1; st.session_state.current_game_q=random.choice(ALIMENTS_DATA); st.rerun()
+    with c3:
+        if st.button("⚠️ DOUTEUX",use_container_width=True,key="h3_real"): 
+            ok=q['statut']=="DOUTEUX"; st.session_state.game_correct+=1 if ok else 0; st.session_state.game_question_count+=1; st.session_state.current_game_q=random.choice(ALIMENTS_DATA); st.rerun()
+    pub_button(); st.stop()
+
         q=st.session_state.current_game_q; prog=int(st.session_state.game_question_count/20*100)
         st.markdown(f"<div class='card-graph'>Q {st.session_state.game_question_count+1}/20 | Score {st.session_state.game_correct}/20 | Essai {st.session_state.game_attempts+1}/15<br><div class='progress-bar'><div class='progress-fill' style='width:{prog}%'></div></div><br><b>{q['icon']} {q['nom']}</b><br>{q['desc']}<br><b>HALAL / HARAM / DOUTEUX ?</b></div>",unsafe_allow_html=True)
         c1,c2,c3=st.columns(3)
